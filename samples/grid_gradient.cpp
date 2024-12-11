@@ -13,7 +13,13 @@ void grid_gradient::update(gcad::players_t &players) {
     auto player = players[0];
 
     for (auto step = 0u; step < 5; step++) {
-        int direction = player.choose(4);
+        player.see(x);
+        player.see(y);
+
+        int direction = player.choose(5);
+
+        if (direction == 4)
+            continue;
 
         int *axis = &x;
         if (direction & 1)
@@ -23,9 +29,6 @@ void grid_gradient::update(gcad::players_t &players) {
             (*axis)++;
         else
             (*axis)--;
-
-        player.see(x);
-        player.see(y);
     }
 
     players[0].score(x);
@@ -36,7 +39,7 @@ int main() {
 
     std::array<std::array<unsigned, 11>, 11> histogram{{0}};
 
-    for (auto iteration = 0u; iteration < 100; iteration++) {
+    for (auto iteration = 0u; iteration < 1000; iteration++) {
         grid_gradient game;
         game.update(players);
         histogram[game.x][game.y]++;
