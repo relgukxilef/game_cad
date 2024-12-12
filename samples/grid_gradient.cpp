@@ -39,10 +39,11 @@ int main() {
 
     std::array<std::array<unsigned, 11>, 11> histogram{{0}};
 
-    for (auto iteration = 0u; iteration < 1000; iteration++) {
+    for (auto iteration = 0u; iteration < 10'000; iteration++) {
         grid_gradient game;
         game.update(players);
         histogram[game.x][game.y]++;
+        players.restart();
     }
 
     for (auto row : histogram) {
