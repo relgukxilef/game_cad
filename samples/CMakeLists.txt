@@ -4,3 +4,10 @@ add_executable(
 )
 
 target_link_libraries(grid_gradient PRIVATE GameCAD)
+
+add_executable(
+    communication
+    communication.cpp
+)
+
+target_link_libraries(communication PRIVATE GameCAD)

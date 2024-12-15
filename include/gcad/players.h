@@ -15,6 +15,12 @@ namespace gcad {
     };
 
     struct players_t {
+        players_t(unsigned number_players = 1);
+
+        player_ptr operator[](unsigned index);
+        void restart(); 
+        // TODO: maybe store state during a game in separate class
+
         struct edge_t {
             // TODO: prefix of output could be compressed to auto-increment int
             std::vector<unsigned> output;
@@ -33,17 +39,12 @@ namespace gcad {
         };
         // TODO: nodes could be an unordered_set
         std::map<edge_t, node_t, std::less<>> nodes; // shared between players
-        std::vector<std::vector<edge_t>> moves{{}}; // one per player
-        std::vector<std::vector<unsigned>> output{{}};
-        std::vector<bool> expanding{false,};
+        std::vector<std::vector<edge_t>> moves; // one per player
+        std::vector<std::vector<unsigned>> output;
 
         node_t root;
 
         std::random_device random;
-
-        player_ptr operator[](unsigned index);
-        void restart(); 
-        // TODO: maybe store state during a game in separate class
     };
 
 }

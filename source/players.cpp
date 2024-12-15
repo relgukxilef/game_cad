@@ -71,6 +71,11 @@ namespace gcad {
             }
         }
     }
+
+    players_t::players_t(unsigned number_players) {
+        output.resize(number_players);
+        moves.resize(number_players);
+    }
     
     player_ptr players_t::operator[](unsigned index) {
         return {this, index};
@@ -82,9 +87,6 @@ namespace gcad {
         }
         for (auto &player : output) {
             player.clear();
-        }
-        for (auto &player : expanding) {
-            player = false;
         }
     }
 
