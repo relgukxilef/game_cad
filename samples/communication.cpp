@@ -39,17 +39,20 @@ int main() {
 
     array<array<array<unsigned, 2>, 2>, 2> histogram{{{0}}};
 
-    for (auto iteration = 0u; iteration < 100'000; iteration++) {
+    for (auto iteration = 0u; iteration < 1'000'000; iteration++) {
         communication game;
         game.update(players);
         histogram[game.secret][game.color][game.guess]++;
         players.restart();
     }
 
-    for (auto secret : histogram) {
-        for (auto color : secret) {
-            for (auto guess : color) {
-                printf("%u\t", guess);
+    for (auto &secret : histogram) {
+        printf("secret %llu\n", std::distance(&histogram[0], &secret));
+        for (auto &color : secret) {
+            printf("\tcolor %llu\n", std::distance(&secret[0], &color));
+            for (auto &guess : color) {
+                printf("\t\tguess %llu: ", std::distance(&color[0], &guess));
+                printf("%u\n", guess);
             }
         }
         printf("\n");

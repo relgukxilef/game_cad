@@ -1,9 +1,20 @@
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <random>
 #include <functional>
 
 namespace gcad {
+    using namespace std;
+
+    struct hash {
+        size_t operator()(const vector<unsigned>& v) const {
+            size_t hash = 0;
+            for (auto e : v) {
+                hash = hash * 238857403 + e;
+            }
+            return hash;
+        }
+    };
 
     struct player_ptr {
         struct players_t *players;
@@ -21,28 +32,27 @@ namespace gcad {
         void restart(); 
         // TODO: maybe store state during a game in separate class
 
-        struct edge_t {
-            // TODO: prefix of output could be compressed to auto-increment int
-            std::vector<unsigned> output;
-            unsigned input; // one node per choice
-            bool operator<(const edge_t &other) const {
-                return 
-                    std::tie(output, input) < 
-                    std::tie(other.output, other.input);
-            }
-            bool operator<(const std::vector<unsigned> &output) const {
-                return this->output < output;
-            }
+        // output, input, score -> count
+        // output, input -> scores
+        // output -> inputs
+        struct score {
+            unordered_map<unsigned, unsigned> score_count;
         };
-        struct node_t {
-            unsigned count = 0, sum = 0, squares = 0;
+        struct node {
+            unordered_map<unsigned, score> move_score;
         };
-        // TODO: nodes could be an unordered_set
-        std::map<edge_t, node_t, std::less<>> nodes; // shared between players
-        std::vector<std::vector<edge_t>> moves; // one per player
-        std::vector<std::vector<unsigned>> output;
+        unordered_map<vector<unsigned>, node, hash> output_node;
 
-        node_t root;
+        struct edge {
+            vector<unsigned> output;
+            unsigned input;
+        };
+        
+        score root;
+
+        // players moves and outputs for the current game
+        vector<vector<edge>> moves;
+        vector<vector<unsigned>> output;
 
         std::random_device random;
     };
