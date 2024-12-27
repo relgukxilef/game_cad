@@ -18,41 +18,35 @@ namespace gcad {
 
         // Thompson sampling
         unsigned best_move = 0;
-        unsigned best_score = 0;
+        float best_score = 0;
         for (auto move = 0u; move < maximum; move++) {
             auto move_score = node->second.move_score.find(move);
 
-            unsigned sum = 0;
-            unsigned score = 0;
+            float score_sum = 0;
+            float weight_sum = 0;
+
+            for (
+                auto [current_score, count] : players->root.score_count
+            ) {
+                float weight = gamma_distribution<float>(count)(players->random);
+                weight_sum += weight;
+                score_sum += current_score * weight;
+            }
+
+            score_sum /= weight_sum;
+            weight_sum = 1;
+
             if (move_score != node->second.move_score.end()) {
                 for (
                     auto [current_score, count] : move_score->second.score_count
                 ) {
-                    sum += count;
-                    if (
-                        bernoulli_distribution((float)count / sum)(
-                            players->random
-                        )
-                    )
-                        score = current_score;
+                    float weight = gamma_distribution<float>(count)(players->random);
+                    weight_sum += weight;
+                    score_sum += current_score * weight;
                 }
             }
 
-            // exploration bias
-            if (bernoulli_distribution(1.0f / (sum + 1))(
-                players->random
-            )) {
-                sum = 0;
-                for (auto [current_score, count] : players->root.score_count) {
-                    sum += count;
-                    if (
-                        bernoulli_distribution((float)count / sum)(
-                            players->random
-                        )
-                    )
-                        score = current_score;
-                }
-            }
+            float score = score_sum / weight_sum;
 
             if (score > best_score) {
                 best_score = score;

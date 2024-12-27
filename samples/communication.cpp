@@ -39,7 +39,7 @@ int main() {
 
     array<array<array<unsigned, 2>, 2>, 2> histogram{{{0}}};
 
-    for (auto iteration = 0u; iteration < 1'000'000; iteration++) {
+    for (auto iteration = 0u; iteration < 10'000; iteration++) {
         communication game;
         game.update(players);
         histogram[game.secret][game.color][game.guess]++;

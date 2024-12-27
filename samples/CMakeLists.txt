@@ -11,3 +11,10 @@ add_executable(
 )
 
 target_link_libraries(communication PRIVATE GameCAD)
+
+add_executable(
+    chance
+    chance.cpp
+)
+
+target_link_libraries(chance PRIVATE GameCAD)
