@@ -19,8 +19,16 @@ namespace gcad {
         // Thompson sampling
         unsigned best_move = 0;
         float best_score = 0;
-        for (auto move = 0u; move < maximum; move++) {
+        unsigned offset = rand() % maximum;
+        for (auto i = 0u; i < maximum; i++) {
+            auto move = (offset + i) % maximum;
             auto move_score = node->second.move_score.find(move);
+            
+            if (move_score == node->second.move_score.end()) {
+                // explore new nodes first
+                best_move = move;
+                break;
+            }
 
             float score_sum = 0;
             float weight_sum = 0;
@@ -36,14 +44,14 @@ namespace gcad {
             score_sum /= weight_sum;
             weight_sum = 1;
 
-            if (move_score != node->second.move_score.end()) {
-                for (
-                    auto [current_score, count] : move_score->second.score_count
-                ) {
-                    float weight = gamma_distribution<float>(count)(players->random);
-                    weight_sum += weight;
-                    score_sum += current_score * weight;
-                }
+            for (
+                auto [current_score, count] : move_score->second.score_count
+            ) {
+                float weight = gamma_distribution<float>(count)(
+                    players->random
+                );
+                weight_sum += weight;
+                score_sum += current_score * weight;
             }
 
             float score = score_sum / weight_sum;
