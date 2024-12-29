@@ -30,7 +30,7 @@ int main() {
 
     array<unsigned, 2> histogram{0};
 
-    for (auto iteration = 0u; iteration < 10; iteration++) {
+    for (auto iteration = 0u; iteration < 20; iteration++) {
         for (auto iteration = 0u; iteration < 100; iteration++) {
             communication game;
             game.update(players);
@@ -38,6 +38,9 @@ int main() {
             players.restart();
         }
 
-        printf("%lu/%lu\n", histogram[0], histogram[1]);
+        printf(
+            "%lu/%lu (%.3f)\n", histogram[0], histogram[1], 
+            (float)histogram[0] / histogram[1]
+        );
     }
 }

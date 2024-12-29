@@ -30,23 +30,14 @@ namespace gcad {
                 break;
             }
 
+            unsigned count_sum = 0;
             float score_sum = 0;
             float weight_sum = 0;
 
             for (
-                auto [current_score, count] : players->root.score_count
-            ) {
-                float weight = gamma_distribution<float>(count)(players->random);
-                weight_sum += weight;
-                score_sum += current_score * weight;
-            }
-
-            score_sum /= weight_sum;
-            weight_sum = 1;
-
-            for (
                 auto [current_score, count] : move_score->second.score_count
             ) {
+                count_sum += count;
                 float weight = gamma_distribution<float>(count)(
                     players->random
                 );
@@ -55,6 +46,12 @@ namespace gcad {
             }
 
             float score = score_sum / weight_sum;
+
+            if (bernoulli_distribution(1.0f / count_sum)(players->random)) {
+                // explore less explored nodes
+                best_move = move;
+                break;
+            }
 
             if (score > best_score) {
                 best_score = score;
