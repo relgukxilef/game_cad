@@ -18,3 +18,10 @@ add_executable(
 )
 
 target_link_libraries(chance PRIVATE GameCAD)
+
+add_executable(
+    grid_search
+    grid_search.cpp
+)
+
+target_link_libraries(grid_search PRIVATE GameCAD)
