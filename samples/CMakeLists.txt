@@ -25,3 +25,10 @@ add_executable(
 )
 
 target_link_libraries(grid_search PRIVATE GameCAD)
+
+add_executable(
+    guess
+    guess.cpp
+)
+
+target_link_libraries(guess PRIVATE GameCAD)
