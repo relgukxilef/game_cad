@@ -20,9 +20,27 @@ namespace gcad {
         unique_ptr<void, group_closer_t> group(string_view title);
         void score(string_view text, unsigned value);
         bool game_over();
+        void print();
 
         struct players2_t *players;
         unsigned index;
+    };
+
+    enum struct item_type {
+        leaf, begin, end,
+    };
+
+    struct item {
+        item_type type;
+        string text;
+    };
+
+    struct player_info {
+        bool game_over = false;
+        bool human = false;
+        vector<item> items;
+        vector<unsigned> inputs;
+        string prompt;
     };
 
     struct players2_t {
@@ -32,6 +50,6 @@ namespace gcad {
 
         players_t players;
         unordered_map<string_view, unsigned> labels;
-        vector<bool> game_over;
+        vector<player_info> player_infos;
     };
 }

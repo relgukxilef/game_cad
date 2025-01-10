@@ -1,5 +1,7 @@
 #include <gcad/players2.h>
 
+#include <iostream>
+
 using namespace gcad;
 
 struct guess {
@@ -33,7 +35,7 @@ struct guess {
 int main() {
     players2_t players(1);
 
-    for (auto iteration = 0u; iteration < 200; iteration++) {
+    for (auto iteration = 0u; iteration < 1'000; iteration++) {
         guess game(players);
 
         while (!players[0].game_over()) {
@@ -41,5 +43,21 @@ int main() {
         }
 
         players.restart();
+    }
+
+    printf("wins: %u\n", players.players.root.score_count[1]);
+
+    players.player_infos[0].human = true;
+
+    guess game(players);
+
+    while (true) {
+        game.update(players);
+        players[0].print();
+        if (players[0].game_over())
+            break;
+        unsigned input;
+        cin >> input;
+        players.player_infos[0].inputs.push_back(input);
     }
 }

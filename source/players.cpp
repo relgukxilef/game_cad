@@ -47,7 +47,11 @@ namespace gcad {
 
             float score = score_sum / weight_sum;
 
-            if (bernoulli_distribution(1.0f / count_sum)(players->random)) {
+            if (
+                bernoulli_distribution(1.0f / count_sum / maximum)(
+                    players->random
+                )
+            ) {
                 // explore less explored nodes
                 best_move = move;
                 break;
@@ -97,5 +101,4 @@ namespace gcad {
             player.clear();
         }
     }
-
 }
