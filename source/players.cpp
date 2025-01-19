@@ -1,6 +1,5 @@
 #include <gcad/players.h>
 
-#include <cstdlib>
 #include <limits>
 
 namespace gcad {
@@ -11,7 +10,7 @@ namespace gcad {
         auto node = players->output_node.find(output);
         
         if (node == players->output_node.end()) {
-            unsigned move = rand() % maximum;
+            unsigned move = players->random() % maximum;
             players->moves[index].push_back({output, move});
             return move;
         }
@@ -19,13 +18,14 @@ namespace gcad {
         // Thompson sampling
         unsigned best_move = 0;
         float best_score = 0;
-        unsigned offset = rand() % maximum;
+        unsigned offset = players->random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
             auto move_score = node->second.move_score.find(move);
             
             if (move_score == node->second.move_score.end()) {
                 // explore new nodes first
+                // TODO: is this smart for games with high branching factors?
                 best_move = move;
                 break;
             }
