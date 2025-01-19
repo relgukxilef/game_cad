@@ -32,3 +32,10 @@ add_executable(
 )
 
 target_link_libraries(guess PRIVATE GameCAD)
+
+add_executable(
+    rock_paper_scissors
+    rock_paper_scissors.cpp
+)
+
+target_link_libraries(rock_paper_scissors PRIVATE GameCAD)

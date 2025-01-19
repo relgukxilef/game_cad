@@ -23,6 +23,7 @@ namespace gcad {
         void print();
         void set_human(bool human);
         void input(unsigned value);
+        bool active();
 
         struct players2_t *players;
         unsigned index;
@@ -40,6 +41,7 @@ namespace gcad {
     struct player_info {
         bool game_over = false;
         bool human = false;
+        bool active = false;
         vector<item> items;
         vector<unsigned> inputs;
         vector<unsigned> prefix_inputs, prefix_outputs;

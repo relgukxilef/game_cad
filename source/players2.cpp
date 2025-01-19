@@ -32,15 +32,18 @@ namespace gcad {
     ) {
         // TODO: make actions visible to the random player
         auto &player = players->player_infos[index];
-        player.prompt = string(prompt);
         if (!player.human)
-            return optional<unsigned>(players->players[index].choose(maximum));
+            return players->players[index].choose(maximum);
 
-        if (player.inputs.empty())
+        if (player.inputs.empty()) {
+            player.prompt = string(prompt);
+            player.active = true;
             return {};
+        }
 
         auto input = player.inputs.back();
         player.inputs.pop_back();
+        player.prompt.clear();
         return input;
     }
 
@@ -59,11 +62,10 @@ namespace gcad {
     }
 
     void player2_ptr::score(string_view text, unsigned value) {
-        players->player_infos[index].items.push_back({
-            item_type::leaf, string(text)}
-        );
+        auto &player = players->player_infos[index];
+        player.items.push_back({item_type::leaf, string(text)});
+        player.game_over = true;
         players->players[index].score(value);
-        players->player_infos[index].game_over = true;
     }
 
     bool player2_ptr::game_over() {
@@ -76,7 +78,8 @@ namespace gcad {
             cout << item.text << endl;
         }
         player.items.clear();
-        cout << player.prompt << " ";
+        if (player.active)
+            cout << player.prompt << " ";
     }
 
     void player2_ptr::set_human(bool human) {
@@ -84,7 +87,13 @@ namespace gcad {
     }
 
     void player2_ptr::input(unsigned value) {
-        players->player_infos[index].inputs.push_back(value);
+        auto &player = players->player_infos[index];
+        player.active = false;
+        player.inputs.push_back(value);
+    }
+
+    bool player2_ptr::active() {
+        return players->player_infos[index].active;
     }
 
     void group_closer_t::operator()() {
