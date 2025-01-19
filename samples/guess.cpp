@@ -9,7 +9,7 @@ struct guess {
     unsigned attempt = 0;
 
     guess(players2_t &players) {
-        number = rand() % 100;
+        number = players.random(100);
     }
 
     void update(players2_t &players) {
@@ -47,7 +47,7 @@ int main() {
 
     printf("wins: %u\n", players.players.root.score_count[1]);
 
-    players.player_infos[0].human = true;
+    players[0].set_human(true);
 
     guess game(players);
 
@@ -58,6 +58,6 @@ int main() {
             break;
         unsigned input;
         cin >> input;
-        players.player_infos[0].inputs.push_back(input);
+        players[0].input(input);
     }
 }

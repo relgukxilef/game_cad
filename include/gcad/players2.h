@@ -21,6 +21,8 @@ namespace gcad {
         void score(string_view text, unsigned value);
         bool game_over();
         void print();
+        void set_human(bool human);
+        void input(unsigned value);
 
         struct players2_t *players;
         unsigned index;
@@ -40,12 +42,14 @@ namespace gcad {
         bool human = false;
         vector<item> items;
         vector<unsigned> inputs;
+        vector<unsigned> prefix_inputs, prefix_outputs;
         string prompt;
     };
 
     struct players2_t {
         players2_t(unsigned player_count);
         player2_ptr operator[](unsigned index);
+        unsigned random(unsigned maximum);
         void restart();
 
         players_t players;

@@ -2,12 +2,16 @@
 #include <iostream>
 
 namespace gcad {
-    players2_t::players2_t(unsigned player_count) : players(player_count) {
-        player_infos.resize(player_count);
+    players2_t::players2_t(unsigned player_count) : players(player_count + 1) {
+        player_infos.resize(player_count + 1);
     }
 
-    player2_ptr players2_t::operator[](unsigned index){
-        return {this, index};
+    player2_ptr players2_t::operator[](unsigned index) {
+        return {this, index + 1};
+    }
+
+    unsigned players2_t::random(unsigned maximum) {
+        return players[0].choose(maximum);
     }
 
     void players2_t::restart() {
@@ -18,8 +22,7 @@ namespace gcad {
         players.restart();
     }
 
-    bool player2_ptr::option(string_view title)
-    {
+    bool player2_ptr::option(string_view title) {
         // TODO
         return false;
     }
@@ -27,6 +30,7 @@ namespace gcad {
     optional<unsigned> player2_ptr::choice(
         string_view prompt, unsigned maximum
     ) {
+        // TODO: make actions visible to the random player
         auto &player = players->player_infos[index];
         player.prompt = string(prompt);
         if (!player.human)
@@ -73,6 +77,14 @@ namespace gcad {
         }
         player.items.clear();
         cout << player.prompt << " ";
+    }
+
+    void player2_ptr::set_human(bool human) {
+        players->player_infos[index].human = human;
+    }
+
+    void player2_ptr::input(unsigned value) {
+        players->player_infos[index].inputs.push_back(value);
     }
 
     void group_closer_t::operator()() {
