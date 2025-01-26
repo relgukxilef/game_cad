@@ -39,3 +39,11 @@ add_executable(
 )
 
 target_link_libraries(rock_paper_scissors PRIVATE GameCAD)
+
+add_executable(
+    tic_tac_toe
+    tic_tac_toe.cpp
+)
+
+target_link_libraries(tic_tac_toe PRIVATE GameCAD)
+target_compile_features(tic_tac_toe PUBLIC cxx_std_20)
