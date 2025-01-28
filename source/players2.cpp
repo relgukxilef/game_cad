@@ -74,8 +74,20 @@ namespace gcad {
 
     void player2_ptr::print() {
         auto &player = players->player_infos[index];
+        unsigned max_width = 0;
         for (auto &item : player.items) {
-            cout << item.text << endl;
+            max_width = std::max<unsigned>(max_width, item.text.size());
+        }
+        cout.setf(ios::left, ios::adjustfield);
+        unsigned index = 0;
+        for (auto &item : player.items) {
+            cout.width(max_width);
+            cout << item.text;
+            index++;
+            if (index == player.columns) {
+                cout << endl;
+                index = 0;
+            }
         }
         player.items.clear();
         if (player.active)
@@ -94,6 +106,11 @@ namespace gcad {
 
     bool player2_ptr::active() {
         return players->player_infos[index].active;
+    }
+
+    void player2_ptr::grid(unsigned columns) {
+        auto &player = players->player_infos[index];
+        player.columns = columns;
     }
 
     void group_closer_t::operator()() {

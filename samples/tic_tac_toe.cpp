@@ -52,6 +52,7 @@ struct tic_tac_toe {
                 return;
             marks[player] |= (1 << *choice);
 
+            players[player].grid(3);
             uint16_t m[2] = {marks[0], marks[1]};
             for (int y = 0; y < 3; y++) {
                 for (int x = 0; x < 3; x++) {

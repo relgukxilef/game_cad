@@ -24,6 +24,7 @@ namespace gcad {
         void set_human(bool human);
         void input(unsigned value);
         bool active();
+        void grid(unsigned columns);
 
         struct players2_t *players;
         unsigned index;
@@ -46,6 +47,7 @@ namespace gcad {
         vector<unsigned> inputs;
         vector<unsigned> prefix_inputs, prefix_outputs;
         string prompt;
+        unsigned columns = 1;
     };
 
     struct players2_t {
