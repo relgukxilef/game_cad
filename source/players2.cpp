@@ -1,7 +1,9 @@
 #include <gcad/players2.h>
 #include <iostream>
+#include <cassert>
 
 namespace gcad {
+    // TODO: order functions to match the header
     players2_t::players2_t(unsigned player_count) : players(player_count + 1) {
         player_infos.resize(player_count + 1);
     }
@@ -18,6 +20,7 @@ namespace gcad {
         for (auto &player : player_infos) {
             player.game_over = false;
             player.items.clear();
+            player.inputs.clear();
         }
         players.restart();
     }
@@ -32,17 +35,30 @@ namespace gcad {
     ) {
         // TODO: make actions visible to the random player
         auto &player = players->player_infos[index];
-        if (!player.human)
-            return players->players[index].choose(maximum);
 
-        if (player.inputs.empty()) {
-            player.prompt = string(prompt);
+        if (
+            players->sampling_player.value_or(index) == index &&
+            player.prefix_inputs.size() > player.inputs.size()
+        ) {
+            auto value = player.prefix_inputs[player.inputs.size()];
+            player.inputs.push_back(value);
+            return value;
+        }
+
+        if (!player.human || players->sampling_player) {
+            auto value = players->players[index].choose(maximum);
+            player.inputs.push_back(value);
+            return value;
+        }
+
+        if (!player.active) {
+            player.prompt.assign(prompt);
             player.active = true;
             return {};
         }
 
         auto input = player.inputs.back();
-        player.inputs.pop_back();
+        player.active = false;
         player.prompt.clear();
         return input;
     }
@@ -52,9 +68,16 @@ namespace gcad {
         auto value = 
             labels.insert({text, (unsigned)labels.size()}).first->second;
         players->players[index].see(value);
-        players->player_infos[index].items.push_back({
+        auto &player = players->player_infos[index];
+        player.items.push_back({
             item_type::leaf, string(text)}
         );
+        // check if the new value keeps outputs and prefix_outputs in sync
+        if (
+            player.prefix_outputs.size() > players->players.output[index].size() &&
+            player.prefix_outputs[players->players.output[index].size()] != value
+        )
+            player.game_over = true;
     }
 
     void player2_ptr::counter(string_view text, unsigned value) {
@@ -76,7 +99,7 @@ namespace gcad {
         auto &player = players->player_infos[index];
         unsigned max_width = 0;
         for (auto &item : player.items) {
-            max_width = std::max<unsigned>(max_width, item.text.size());
+            max_width = std::max(max_width, (unsigned)item.text.size());
         }
         cout.setf(ios::left, ios::adjustfield);
         unsigned index = 0;
@@ -100,7 +123,6 @@ namespace gcad {
 
     void player2_ptr::input(unsigned value) {
         auto &player = players->player_infos[index];
-        player.active = false;
         player.inputs.push_back(value);
     }
 
@@ -113,7 +135,33 @@ namespace gcad {
         player.columns = columns;
     }
 
-    void group_closer_t::operator()() {
+    const int dummy = 0;
+
+    unique_ptr<const void, sample_closer_t> player2_ptr::sample() {
+        auto &player = players->player_infos[index];
+        players->sampling_player = index;
+
+        for (auto &player : players->player_infos) {
+            player.prefix_inputs = player.inputs;
+            player.prefix_outputs = players->players.output[index];
+            player.inputs.clear();
+            players->players.output[index].clear();
+        }
+
+        return {&dummy, {*this}};
+    }
+
+    void group_closer_t::operator()(const void *) {
         // TODO
+    }
+
+    void sample_closer_t::operator()(const void *) {
+        assert(player.players->sampling_player == player.index);
+        player.players->sampling_player = {};
+
+        for (auto &info : player.players->player_infos) {
+            info.inputs = info.prefix_inputs;
+            player.players->players.output[player.index] = info.prefix_outputs;
+        }
     }
 }

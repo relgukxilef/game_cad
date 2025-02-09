@@ -85,6 +85,7 @@ int main() {
     }
 
     auto human = players[0];
+    auto computer = players[1];
     human.set_human(true);
 
     tic_tac_toe game;
@@ -92,12 +93,28 @@ int main() {
     while (true) {
         game.update(players);
         human.print();
+        
         if (human.game_over())
             break;
-        if (!human.active())
+        
+        if (human.active()) {
+            unsigned input;
+            cin >> input;
+            human.input(input);
             continue;
-        unsigned input;
-        cin >> input;
-        human.input(input);
+        }
+
+        auto sample = computer.sample();
+
+        const unsigned size = 10;
+        for (auto iteration = 0u; iteration < size; iteration++) {
+            tic_tac_toe hypothetical;
+
+            while (!computer.game_over()) {
+                hypothetical.update(players);
+            }
+
+            players.restart();
+        }
     }
 }

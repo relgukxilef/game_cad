@@ -56,6 +56,8 @@ int main() {
         players[0].print();
         if (players[0].game_over())
             break;
+        if (!players[0].active())
+            continue;
         unsigned input;
         cin >> input;
         players[0].input(input);

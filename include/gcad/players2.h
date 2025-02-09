@@ -7,17 +7,16 @@
 namespace gcad {
     using namespace std;
 
-    struct group_closer_t {
-        typedef unsigned pointer;
-        void operator()();
-    };
+    struct group_closer_t;
+
+    struct sample_closer_t;
 
     struct player2_ptr {
         bool option(string_view title);
         optional<unsigned> choice(string_view prompt, unsigned maximum);
         void label(string_view text);
         void counter(string_view text, unsigned value);
-        unique_ptr<void, group_closer_t> group(string_view title);
+        unique_ptr<const void, group_closer_t> group(string_view title);
         void score(string_view text, unsigned value);
         bool game_over();
         void print();
@@ -25,9 +24,23 @@ namespace gcad {
         void input(unsigned value);
         bool active();
         void grid(unsigned columns);
+        unique_ptr<const void, sample_closer_t> sample();
 
         struct players2_t *players;
         unsigned index;
+    };
+
+    struct group_closer_t {
+        typedef const void *pointer;
+        player2_ptr player;
+        unsigned depth;
+        void operator()(const void *);
+    };
+
+    struct sample_closer_t {
+        typedef const void *pointer;
+        player2_ptr player;
+        void operator()(const void *);
     };
 
     enum struct item_type {
@@ -59,5 +72,6 @@ namespace gcad {
         players_t players;
         unordered_map<string_view, unsigned> labels;
         vector<player_info> player_infos;
+        optional<unsigned> sampling_player;
     };
 }
