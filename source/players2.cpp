@@ -35,6 +35,7 @@ namespace gcad {
     ) {
         // TODO: make actions visible to the random player
         auto &player = players->player_infos[index];
+        player.items.clear();
 
         if (
             players->sampling_player.value_or(index) == index &&
@@ -112,7 +113,6 @@ namespace gcad {
                 index = 0;
             }
         }
-        player.items.clear();
         if (player.active)
             cout << player.prompt << " ";
     }

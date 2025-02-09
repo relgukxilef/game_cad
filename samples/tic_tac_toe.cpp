@@ -104,9 +104,12 @@ int main() {
             continue;
         }
 
+        if (players.player_infos[computer.index].items.empty())
+            continue;
+
         auto sample = computer.sample();
 
-        const unsigned size = 10;
+        const unsigned size = 1'000;
         for (auto iteration = 0u; iteration < size; iteration++) {
             tic_tac_toe hypothetical;
 
@@ -115,6 +118,9 @@ int main() {
             }
 
             players.restart();
+
+            cout << iteration * 100 / size << "%\r";
         }
+        cout << endl;
     }
 }
