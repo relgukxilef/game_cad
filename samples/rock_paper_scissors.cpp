@@ -44,8 +44,6 @@ int main() {
         players.restart();
     }
 
-    printf("Wins: %u\n", players.players.root.score_count[2]);
-
     auto human = players[0];
     human.set_human(true);
 

@@ -13,7 +13,7 @@ namespace gcad {
     }
 
     unsigned players2_t::random(unsigned maximum) {
-        return players[0].choose(maximum);
+        return *player2_ptr{this, 0}.choice("", maximum);
     }
 
     void players2_t::restart() {
@@ -35,7 +35,6 @@ namespace gcad {
     ) {
         // TODO: make actions visible to the random player
         auto &player = players->player_infos[index];
-        player.items.clear();
 
         if (
             players->sampling_player.value_or(index) == index &&
@@ -52,16 +51,9 @@ namespace gcad {
             return value;
         }
 
-        if (!player.active) {
-            player.prompt.assign(prompt);
-            player.active = true;
-            return {};
-        }
-
-        auto input = player.inputs.back();
-        player.active = false;
-        player.prompt.clear();
-        return input;
+        player.prompt.assign(prompt);
+        player.active = true;
+        return {};
     }
 
     void player2_ptr::label(string_view text) {
@@ -70,15 +62,18 @@ namespace gcad {
             labels.insert({text, (unsigned)labels.size()}).first->second;
         players->players[index].see(value);
         auto &player = players->player_infos[index];
-        player.items.push_back({
-            item_type::leaf, string(text)}
-        );
         // check if the new value keeps outputs and prefix_outputs in sync
         if (
             player.prefix_outputs.size() > players->players.output[index].size() &&
             player.prefix_outputs[players->players.output[index].size()] != value
-        )
+        ) {
             player.game_over = true;
+            return;
+        }
+
+        player.items.push_back({
+            item_type::leaf, string(text)}
+        );
     }
 
     void player2_ptr::counter(string_view text, unsigned value) {
@@ -115,6 +110,7 @@ namespace gcad {
         }
         if (player.active)
             cout << player.prompt << " ";
+        player.items.clear();
     }
 
     void player2_ptr::set_human(bool human) {
@@ -123,7 +119,7 @@ namespace gcad {
 
     void player2_ptr::input(unsigned value) {
         auto &player = players->player_infos[index];
-        player.inputs.push_back(value);
+        player.prefix_inputs.push_back(value);
     }
 
     bool player2_ptr::active() {

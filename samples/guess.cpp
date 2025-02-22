@@ -45,8 +45,6 @@ int main() {
         players.restart();
     }
 
-    printf("wins: %u\n", players.players.root.score_count[1]);
-
     players[0].set_human(true);
 
     guess game(players);

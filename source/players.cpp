@@ -7,65 +7,11 @@ namespace gcad {
     unsigned player_ptr::choose(unsigned maximum)
     {
         auto &output = players->output[index];
-        auto node = players->output_node.find(output);
         
-        if (node == players->output_node.end()) {
-            unsigned move = players->random() % maximum;
-            players->moves[index].push_back({output, move});
-            return move;
-        }
+        auto move = players->solver.choose(output, maximum);
 
-        // Thompson sampling
-        unsigned best_move = 0;
-        float best_score = 0;
-        unsigned offset = players->random() % maximum;
-        for (auto i = 0u; i < maximum; i++) {
-            auto move = (offset + i) % maximum;
-            auto move_score = node->second.move_score.find(move);
-            
-            if (move_score == node->second.move_score.end()) {
-                // explore new nodes first
-                // TODO: is this smart for games with high branching factors?
-                best_move = move;
-                break;
-            }
-
-            unsigned count_sum = 0;
-            float score_sum = 0;
-            float weight_sum = 0;
-
-            for (
-                auto [current_score, count] : move_score->second.score_count
-            ) {
-                count_sum += count;
-                float weight = gamma_distribution<float>(count)(
-                    players->random
-                );
-                weight_sum += weight;
-                score_sum += current_score * weight;
-            }
-
-            float score = score_sum / weight_sum;
-
-            if (
-                bernoulli_distribution(1.0f / count_sum / maximum)(
-                    players->random
-                )
-            ) {
-                // explore less explored nodes
-                best_move = move;
-                break;
-            }
-
-            if (score > best_score) {
-                best_score = score;
-                best_move = move;
-            }
-        }
-
-        players->moves[index].push_back({output, best_move});
-
-        return best_move;
+        players->moves[index].push_back({output, move});
+        return move;
     }
 
     void player_ptr::see(unsigned value) {
@@ -73,14 +19,8 @@ namespace gcad {
     }
 
     void player_ptr::score(unsigned value) {
-        players->root.score_count.insert({value, 0}).first->second++;
-
         for (auto edge : players->moves[index]) {
-            auto &node = 
-                players->output_node.insert({edge.output, {}}).first->second;
-            auto &score = 
-                node.move_score.insert({edge.input, {}}).first->second;
-            score.score_count.insert({value, 0}).first->second++;
+            players->solver.score(edge.output, edge.input, value);
         }
     }
 
