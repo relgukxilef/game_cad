@@ -1,9 +1,13 @@
+enable_testing()
+
 add_executable(
     grid_gradient
     grid_gradient.cpp
 )
 
 target_link_libraries(grid_gradient PRIVATE GameCAD)
+
+add_test(NAME grid_gradient COMMAND grid_gradient)
 
 add_executable(
     communication
@@ -12,6 +16,8 @@ add_executable(
 
 target_link_libraries(communication PRIVATE GameCAD)
 
+add_test(NAME communication COMMAND communication)
+
 add_executable(
     chance
     chance.cpp
@@ -19,12 +25,16 @@ add_executable(
 
 target_link_libraries(chance PRIVATE GameCAD)
 
+add_test(NAME chance COMMAND chance)
+
 add_executable(
     grid_search
     grid_search.cpp
 )
 
 target_link_libraries(grid_search PRIVATE GameCAD)
+
+add_test(NAME grid_search COMMAND grid_search)
 
 add_executable(
     guess

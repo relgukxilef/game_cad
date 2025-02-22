@@ -1,17 +1,18 @@
 #include <cstdio>
 #include <array>
+#include <cassert>
 
 #include <gcad/players.h>
 
 using namespace std;
 
-struct communication {
+struct chance {
     int move;
 
     void update(gcad::players_t &players);
 };
 
-void communication::update(gcad::players_t &players) {
+void chance::update(gcad::players_t &players) {
     auto player = players[0];
 
     move = player.choose(2);
@@ -32,7 +33,7 @@ int main() {
 
     for (auto iteration = 0u; iteration < 20; iteration++) {
         for (auto iteration = 0u; iteration < 100; iteration++) {
-            communication game;
+            chance game;
             game.update(players);
             histogram[game.move]++;
             players.restart();
@@ -43,4 +44,6 @@ int main() {
             (float)histogram[0] / histogram[1]
         );
     }
+
+    assert(histogram[0] / histogram[1] < 0.5);
 }
