@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <array>
+#include <cassert>
 
 #include <gcad/players.h>
 
@@ -57,4 +58,7 @@ int main() {
         }
         printf("\n");
     }
+
+    assert(histogram[0][0][0] + histogram[0][1][0] > 2'500);
+    assert(histogram[1][0][1] + histogram[1][1][1] > 2'500);
 }
