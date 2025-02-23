@@ -31,6 +31,6 @@ namespace gcad {
         };
 
         unordered_map<vector<unsigned>, node, hash> information_node;
-        std::random_device random;
+        std::minstd_rand random;
     };
 }
