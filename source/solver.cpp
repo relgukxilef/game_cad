@@ -11,6 +11,7 @@ namespace gcad {
             return random() % maximum;
         }
 
+        float sum = 0;
         float squares = 0;
         unsigned offset = random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
@@ -23,10 +24,12 @@ namespace gcad {
                 return move;
             }
 
+            sum += move_score.sum / move_score.count;
             squares += move_score.squares / move_score.count;
         }
 
         squares /= maximum;
+        sum /= maximum;
 
         // Thompson sampling
         unsigned best_move = offset;
@@ -34,10 +37,10 @@ namespace gcad {
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
             auto move_score = node.move_score[move];
-            float mean = move_score.sum / move_score.count;
+            float mean = (move_score.sum + sum) / (move_score.count + 1);
             float deviation = sqrt(
                 (
-                    (move_score.squares + squares) / move_score.count - 
+                    (move_score.squares + squares) / (move_score.count + 1) - 
                     mean * mean
                 ) / move_score.count
             );
