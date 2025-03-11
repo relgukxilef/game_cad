@@ -48,8 +48,11 @@ struct tic_tac_toe {
         }
 
         if (auto choice = players[player].choice("Cell index", 9)) {
-            if (occupied & (1 << *choice))
+            if (occupied & (1 << *choice)) {
+                players[player].grid(1);
+                players[player].label("Invalid move");
                 return;
+            }
             marks[player] |= (1 << *choice);
 
             players[player].grid(3);
@@ -74,7 +77,7 @@ struct tic_tac_toe {
 int main() {
     players2_t players(2);
 
-    for (auto iteration = 0u; iteration < 10'000; iteration++) {
+    for (auto iteration = 0u; iteration < 100; iteration++) {
         tic_tac_toe game;
 
         while (!players[0].game_over() || !players[1].game_over()) {
@@ -109,7 +112,7 @@ int main() {
 
         auto sample = computer.sample();
 
-        const unsigned size = 1'000;
+        const unsigned size = 1000;
         for (auto iteration = 0u; iteration < size; iteration++) {
             tic_tac_toe hypothetical;
 

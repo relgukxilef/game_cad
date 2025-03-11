@@ -1,38 +1,44 @@
 #include <vector>
-#include <unordered_map>
-#include <random>
-#include <functional>
+#include <optional>
 
 #include "solver.h"
 
 namespace gcad {
     using namespace std;
 
-    struct player_ptr {
-        struct players_t *players;
-        unsigned index;
+    struct replay_t {
+        struct edge {
+            vector<unsigned> output;
+            unsigned input;
+        };
 
+        struct player {
+            vector<edge> moves;
+            vector<unsigned> output;
+        };
+        
+        vector<player> players;
+    };
+
+    struct player_ptr {
+        optional<unsigned> replay(unsigned maximum);
         unsigned choose(unsigned maximum);
         void see(unsigned value);
         void score(unsigned value);
+        
+        struct players_t *players;
+        unsigned index;
     };
 
     struct players_t {
         players_t(unsigned number_players = 1);
 
         player_ptr operator[](unsigned index);
-        void restart(); 
-        // TODO: maybe store state during a game in separate class
-
-        struct edge {
-            vector<unsigned> output;
-            unsigned input;
-        };
+        void restart();
         
-        // players moves and outputs for the current game
-        vector<vector<edge>> moves;
-        vector<vector<unsigned>> output;
-
+        bool contradiction = false;
+        replay_t current_game;
+        replay_t filter;
         solver_t solver;
     };
 

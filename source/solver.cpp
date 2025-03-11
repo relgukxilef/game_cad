@@ -13,7 +13,7 @@ namespace gcad {
 
         float sum = 0;
         float squares = 0;
-        unsigned offset = random() % maximum;
+        unsigned offset = (random() / 16) % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
             auto move_score = node.move_score[move];

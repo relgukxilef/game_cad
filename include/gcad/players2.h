@@ -41,6 +41,7 @@ namespace gcad {
     struct sample_closer_t {
         typedef const void *pointer;
         player2_ptr player;
+        replay_t original;
         void operator()(const void *);
     };
 
@@ -58,8 +59,6 @@ namespace gcad {
         bool human = false;
         bool active = false;
         vector<item> items;
-        vector<unsigned> inputs;
-        vector<unsigned> prefix_inputs, prefix_outputs;
         string prompt;
         unsigned columns = 1;
     };
@@ -73,6 +72,6 @@ namespace gcad {
         players_t players;
         unordered_map<string_view, unsigned> labels;
         vector<player_info> player_infos;
-        optional<unsigned> sampling_player;
+        bool sampling = false;
     };
 }
