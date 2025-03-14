@@ -15,7 +15,7 @@ struct chance {
 void chance::update(gcad::players_t &players) {
     auto player = players[0];
 
-    move = player.choose(2);
+    move = player.choose(2).value();
 
     auto probability = array<unsigned, 2>{10, 11}[move];
 
@@ -27,7 +27,8 @@ void chance::update(gcad::players_t &players) {
 }
 
 int main() {
-    gcad::players_t players(1);
+    gcad::solver_t solver;
+    gcad::players_t players(1, &solver);
 
     array<unsigned, 2> histogram{0};
 

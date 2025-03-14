@@ -33,7 +33,8 @@ struct guess {
 };
 
 int main() {
-    players2_t players(1);
+    solver_t solver;
+    players2_t players(1, &solver);
 
     for (auto iteration = 0u; iteration < 1'000; iteration++) {
         guess game(players);
@@ -44,8 +45,6 @@ int main() {
 
         players.restart();
     }
-
-    players[0].set_human(true);
 
     guess game(players);
 

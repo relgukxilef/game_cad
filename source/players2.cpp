@@ -3,27 +3,6 @@
 #include <cassert>
 
 namespace gcad {
-    // TODO: order functions to match the header
-    players2_t::players2_t(unsigned player_count) : players(player_count + 1) {
-        player_infos.resize(player_count + 1);
-    }
-
-    player2_ptr players2_t::operator[](unsigned index) {
-        return {this, index + 1};
-    }
-
-    unsigned players2_t::random(unsigned maximum) {
-        return *player2_ptr{this, 0}.choice("", maximum);
-    }
-
-    void players2_t::restart() {
-        for (auto &player : player_infos) {
-            player.game_over = false;
-            player.items.clear();
-        }
-        players.restart();
-    }
-
     bool player2_ptr::option(string_view title) {
         // TODO
         return false;
@@ -35,17 +14,14 @@ namespace gcad {
         // TODO: make actions visible to the random player
         auto &player = players->player_infos[index];
 
-        if (!player.human || players->sampling) {
-            return players->players[index].choose(maximum);
+        auto move = players->players[index].choose(maximum);
+
+        if (!move) {
+            player.prompt.assign(prompt);
         }
 
-        if (auto move = players->players[index].replay(maximum)) {
-            return *move;
-        }
-
-        player.prompt.assign(prompt);
-        player.active = true;
-        return {};
+        player.active = !move.has_value();
+        return move;
     }
 
     void player2_ptr::label(string_view text) {
@@ -72,7 +48,9 @@ namespace gcad {
     }
 
     bool player2_ptr::game_over() {
-        return players->player_infos[index].game_over;
+        return 
+            players->players.contradiction || 
+            players->player_infos[index].game_over;
     }
 
     void player2_ptr::print() {
@@ -97,15 +75,11 @@ namespace gcad {
         player.items.clear();
     }
 
-    void player2_ptr::set_human(bool human) {
-        players->player_infos[index].human = human;
-    }
-
     void player2_ptr::input(unsigned value) {
         auto &player = players->player_infos[index];
         player.active = false;
         players->players.filter.players[index].moves.push_back({
-            players->players.current_game.players[index].output, value
+            players->players.current.players[index].output, value
         });
     }
 
@@ -118,24 +92,32 @@ namespace gcad {
         player.columns = columns;
     }
 
-    const int dummy = 0;
-
-    unique_ptr<const void, sample_closer_t> player2_ptr::sample() {
-        players->players.filter.players[index] = 
-            players->players.current_game.players[index];
-        auto original = players->players.current_game;
-        players->restart();
-        players->sampling = true;
-        return {&dummy, {*this, original}};
+    players2_t player2_ptr::sample(solver_t *solver) {
+        players2_t p(players->players.current.players.size(), solver);
+        p.players = players->players[index].sample(solver);
+        return p;
     }
 
-    void group_closer_t::operator()(const void *) {
-        // TODO
+    players2_t::players2_t(unsigned player_count, solver_t *solver) : 
+        players(player_count + 1, solver) 
+    {
+        player_infos.resize(player_count + 1);
     }
 
-    void sample_closer_t::operator()(const void *) {
-        player.players->players.current_game = std::move(original);
-        player.players->players.filter.players[player.index] = {};
-        player.players->sampling = false;
+    player2_ptr players2_t::operator[](unsigned index) {
+        return {this, index + 1};
     }
+
+    unsigned players2_t::random(unsigned maximum) {
+        return *player2_ptr{this, 0}.choice("", maximum);
+    }
+
+    void players2_t::restart() {
+        for (auto &player : player_infos) {
+            player.game_over = false;
+            player.items.clear();
+        }
+        players.restart();
+    }
+
 }

@@ -75,21 +75,21 @@ struct tic_tac_toe {
 };
 
 int main() {
-    players2_t players(2);
+    // sketch of how I want to use the classes
+    solver_t solver;
 
     for (auto iteration = 0u; iteration < 100; iteration++) {
         tic_tac_toe game;
+        players2_t players(2, &solver);
 
         while (!players[0].game_over() || !players[1].game_over()) {
             game.update(players);
         }
-
-        players.restart();
     }
 
+    players2_t players(2);
     auto human = players[0];
     auto computer = players[1];
-    human.set_human(true);
 
     tic_tac_toe game;
 
@@ -107,23 +107,25 @@ int main() {
             continue;
         }
 
-        if (players.player_infos[computer.index].items.empty())
+        if (!computer.active())
             continue;
 
-        auto sample = computer.sample();
-
-        const unsigned size = 1000;
+        const unsigned size = 1'000;
         for (auto iteration = 0u; iteration < size; iteration++) {
+            players2_t hypothetical_players = computer.sample(&solver);
             tic_tac_toe hypothetical;
 
-            while (!computer.game_over()) {
-                hypothetical.update(players);
+            while (!hypothetical_players[1].game_over()) {
+                hypothetical.update(hypothetical_players);
             }
-
-            players.restart();
 
             cout << iteration * 100 / size << "%\r";
         }
+        computer.input(
+            solver.choose(
+                players.players.current.players[computer.index].output, 9
+            )
+        );
         cout << endl;
     }
 }

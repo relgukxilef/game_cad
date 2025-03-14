@@ -10,7 +10,7 @@ namespace gcad {
 
     struct group_closer_t;
 
-    struct sample_closer_t;
+    struct players2_t;
 
     struct player2_ptr {
         bool option(string_view title);
@@ -21,13 +21,13 @@ namespace gcad {
         void score(string_view text, unsigned value);
         bool game_over();
         void print();
-        void set_human(bool human);
         void input(unsigned value);
         bool active();
         void grid(unsigned columns);
-        unique_ptr<const void, sample_closer_t> sample();
 
-        struct players2_t *players;
+        players2_t sample(solver_t *solver);
+
+        players2_t *players;
         unsigned index;
     };
 
@@ -35,13 +35,6 @@ namespace gcad {
         typedef const void *pointer;
         player2_ptr player;
         unsigned depth;
-        void operator()(const void *);
-    };
-
-    struct sample_closer_t {
-        typedef const void *pointer;
-        player2_ptr player;
-        replay_t original;
         void operator()(const void *);
     };
 
@@ -56,7 +49,6 @@ namespace gcad {
 
     struct player_info {
         bool game_over = false;
-        bool human = false;
         bool active = false;
         vector<item> items;
         string prompt;
@@ -64,7 +56,7 @@ namespace gcad {
     };
 
     struct players2_t {
-        players2_t(unsigned player_count);
+        players2_t(unsigned player_count = 1, solver_t *solver = nullptr);
         player2_ptr operator[](unsigned index);
         unsigned random(unsigned maximum);
         void restart();
@@ -72,6 +64,5 @@ namespace gcad {
         players_t players;
         unordered_map<string_view, unsigned> labels;
         vector<player_info> player_infos;
-        bool sampling = false;
     };
 }

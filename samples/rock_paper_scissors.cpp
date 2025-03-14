@@ -45,7 +45,6 @@ int main() {
     }
 
     auto human = players[0];
-    human.set_human(true);
 
     rock_paper_scissors game;
 

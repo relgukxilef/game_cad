@@ -22,11 +22,11 @@ void communication::update(gcad::players_t &players) {
 
     communicator.see(secret);
 
-    color = communicator.choose(2);
+    color = communicator.choose(2).value();
 
     guesser.see(color);
 
-    guess = guesser.choose(2);
+    guess = guesser.choose(2).value();
 
     int score = (secret == guess) ? 1 : 0;
 
@@ -36,7 +36,8 @@ void communication::update(gcad::players_t &players) {
 
 int main() {
     using namespace std;
-    gcad::players_t players(2);
+    gcad::solver_t solver;
+    gcad::players_t players(2, &solver);
 
     array<array<array<unsigned, 2>, 2>, 2> histogram{{{0}}};
 

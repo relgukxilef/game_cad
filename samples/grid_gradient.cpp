@@ -17,7 +17,7 @@ void grid_gradient::update(gcad::players_t &players) {
         player.see(x);
         player.see(y);
 
-        int direction = player.choose(5);
+        int direction = player.choose(5).value();
 
         if (direction == 4)
             continue;
@@ -36,7 +36,8 @@ void grid_gradient::update(gcad::players_t &players) {
 }
 
 int main() {
-    gcad::players_t players;
+    gcad::solver_t solver;
+    gcad::players_t players(1, &solver);
 
     std::array<std::array<unsigned, 11>, 11> histogram{{0}};
 

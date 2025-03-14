@@ -20,26 +20,28 @@ namespace gcad {
         vector<player> players;
     };
 
+    struct players_t;
+
     struct player_ptr {
-        optional<unsigned> replay(unsigned maximum);
-        unsigned choose(unsigned maximum);
+        optional<unsigned> choose(unsigned maximum);
         void see(unsigned value);
         void score(unsigned value);
+
+        players_t sample(solver_t *solver);
         
-        struct players_t *players;
+        players_t *players;
         unsigned index;
     };
 
     struct players_t {
-        players_t(unsigned number_players = 1);
+        players_t(unsigned number_players = 1, solver_t *solver = nullptr);
 
         player_ptr operator[](unsigned index);
         void restart();
         
         bool contradiction = false;
-        replay_t current_game;
+        replay_t current;
         replay_t filter;
-        solver_t solver;
+        solver_t *solver;
     };
-
 }

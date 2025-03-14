@@ -11,25 +11,30 @@ namespace gcad {
             return random() % maximum;
         }
 
-        float sum = 0;
+        float parent_count = 0;
+        float parent_mean = 0;
         float squares = 0;
-        unsigned offset = (random() / 16) % maximum;
+        unsigned offset = random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
             auto move_score = node.move_score[move];
 
             if (move_score.count == 0) {
-                // explore new nodes first
-                // TODO: is this smart for games with high branching factors?
-                return move;
+                continue;
             }
 
-            sum += move_score.sum / move_score.count;
-            squares += move_score.squares / move_score.count;
+            parent_count += move_score.count;
+            parent_mean += move_score.sum;
+            squares += move_score.squares;
         }
 
-        squares /= maximum;
-        sum /= maximum;
+        // I don't know why this works well.
+        if (bernoulli_distribution(1.f / (sqrt(parent_count) + 1))(random)) {
+            return offset;
+        }
+
+        squares /= parent_count;
+        parent_mean /= parent_count;
 
         // Thompson sampling
         unsigned best_move = offset;
@@ -37,7 +42,13 @@ namespace gcad {
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
             auto move_score = node.move_score[move];
-            float mean = (move_score.sum + sum) / (move_score.count + 1);
+
+            if (move_score.count == 0) {
+                continue;
+            }
+
+            float mean = 
+                (move_score.sum + parent_mean) / (move_score.count + 1);
             float deviation = sqrt(
                 (
                     (move_score.squares + squares) / (move_score.count + 1) - 

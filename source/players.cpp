@@ -4,35 +4,27 @@
 
 namespace gcad {
 
-    optional<unsigned> player_ptr::replay(unsigned maximum) {
-        auto &moves = players->current_game.players[index].moves;
-        auto &output = players->current_game.players[index].output;
+    optional<unsigned> player_ptr::choose(unsigned maximum) {
+        auto &moves = players->current.players[index].moves;
+        auto &output = players->current.players[index].output;
         auto &filter_moves = players->filter.players[index].moves;
 
+        optional<unsigned> move;
         if (moves.size() < filter_moves.size()) {
-            auto move = filter_moves[moves.size()].input;
-            moves.push_back({output, move});
-            return move;
+            move = filter_moves[moves.size()].input;
+        } else if (players->solver) {
+            move = players->solver->choose(output, maximum);
         }
 
-        return nullopt;
-    }
-
-    unsigned player_ptr::choose(unsigned maximum) {
-        if (auto move = replay(maximum)) {
-            return *move;
+        if (move) {
+            moves.push_back({output, *move});
         }
-        
-        auto &moves = players->current_game.players[index].moves;
-        auto &output = players->current_game.players[index].output;
 
-        auto move = players->solver.choose(output, maximum);
-        moves.push_back({output, move});
         return move;
     }
 
     void player_ptr::see(unsigned value) {
-        auto &current_output = players->current_game.players[index].output;
+        auto &current_output = players->current.players[index].output;
         auto &filter_output = players->filter.players[index].output;
 
         if (current_output.size() < filter_output.size() && 
@@ -44,13 +36,22 @@ namespace gcad {
     }
 
     void player_ptr::score(unsigned value) {
-        for (auto edge : players->current_game.players[index].moves) {
-            players->solver.score(edge.output, edge.input, value);
+        if (!players->solver)
+            return;
+        for (auto edge : players->current.players[index].moves) {
+            players->solver->score(edge.output, edge.input, value);
         }
     }
 
-    players_t::players_t(unsigned number_players) {
-        current_game.players.resize(number_players);
+    players_t player_ptr::sample(solver_t *solver) {
+        players_t p(players->filter.players.size(), solver);
+        p.filter.players[index] = players->current.players[index];
+        return p;
+    }
+
+    players_t::players_t(unsigned number_players, solver_t *solver) {
+        this->solver = solver;
+        current.players.resize(number_players);
         filter.players.resize(number_players);
     }
     
@@ -59,7 +60,7 @@ namespace gcad {
     }
 
     void players_t::restart() {
-        for (auto &player : current_game.players) {
+        for (auto &player : current.players) {
             player.moves.clear();
             player.output.clear();
         }
