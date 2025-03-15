@@ -39,6 +39,8 @@ namespace gcad {
         player_ptr operator[](unsigned index);
         void restart();
         
+        unsigned current_player = 0;
+        unsigned current_choice = 0;
         bool contradiction = false;
         replay_t current;
         replay_t filter;

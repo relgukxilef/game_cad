@@ -20,6 +20,9 @@ namespace gcad {
             moves.push_back({output, *move});
         }
 
+        players->current_player = index;
+        players->current_choice = maximum;
+
         return move;
     }
 

@@ -107,8 +107,9 @@ int main() {
             continue;
         }
 
-        if (!computer.active())
+        if (!computer.active()) {
             continue;
+        }
 
         const unsigned size = 1'000;
         for (auto iteration = 0u; iteration < size; iteration++) {
@@ -121,11 +122,7 @@ int main() {
 
             cout << iteration * 100 / size << "%\r";
         }
-        computer.input(
-            solver.choose(
-                players.players.current.players[computer.index].output, 9
-            )
-        );
+        computer.solve(&solver);
         cout << endl;
     }
 }

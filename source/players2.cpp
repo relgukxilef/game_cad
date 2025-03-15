@@ -98,6 +98,15 @@ namespace gcad {
         return p;
     }
 
+    void player2_ptr::solve(solver_t *solver) {
+        input(
+            solver->choose(
+                players->players.current.players[index].output, 
+                players->players.current_choice
+            )
+        );
+    }
+
     players2_t::players2_t(unsigned player_count, solver_t *solver) : 
         players(player_count + 1, solver) 
     {
