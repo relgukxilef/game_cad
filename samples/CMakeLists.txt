@@ -57,3 +57,6 @@ add_executable(
 
 target_link_libraries(tic_tac_toe PRIVATE GameCAD)
 target_compile_features(tic_tac_toe PUBLIC cxx_std_20)
+
+add_executable(race race.cpp)
+target_link_libraries(race PRIVATE GameCAD)
