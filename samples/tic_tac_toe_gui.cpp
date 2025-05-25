@@ -4,8 +4,14 @@
 
 #include <gcad/players2.h>
 
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+
 using namespace gcad;
 
+// TODO: avoid code duplication
 const char *results[] = {"Loss", "Draw", "Win"};
 
 struct tic_tac_toe {
@@ -75,53 +81,39 @@ struct tic_tac_toe {
 };
 
 int main() {
-    solver_t solver;
+    glfwInit();
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Game GUI", NULL, NULL);
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 
-    for (auto iteration = 0u; iteration < 100; iteration++) {
-        tic_tac_toe game;
-        players2_t players(2, &solver);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
 
-        while (!players[0].game_over() || !players[1].game_over()) {
-            game.update(players);
-        }
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+    
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // TODO
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(window);
     }
 
-    players2_t players(2);
-    auto human = players[0];
-    auto computer = players[1];
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
 
-    tic_tac_toe game;
-
-    while (true) {
-        game.update(players);
-        human.print();
-        
-        if (human.game_over())
-            break;
-        
-        if (human.active()) {
-            unsigned input;
-            cin >> input;
-            human.input(input);
-            continue;
-        }
-
-        if (!computer.active()) {
-            continue;
-        }
-
-        const unsigned size = 1'000;
-        for (auto iteration = 0u; iteration < size; iteration++) {
-            players2_t hypothetical_players = computer.sample(&solver);
-            tic_tac_toe hypothetical;
-
-            while (!hypothetical_players[1].game_over()) {
-                hypothetical.update(hypothetical_players);
-            }
-
-            cout << iteration * 100 / size << "%\r";
-        }
-        computer.solve(&solver);
-        cout << endl;
-    }
+    return 0;
 }
