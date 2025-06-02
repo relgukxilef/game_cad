@@ -26,7 +26,6 @@ namespace gcad {
         void grid(unsigned columns);
 
         players2_t sample(solver_t *solver);
-        void solve(solver_t *solver);
 
         players2_t *players;
         unsigned index;

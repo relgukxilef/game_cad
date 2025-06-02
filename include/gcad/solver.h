@@ -16,6 +16,7 @@ namespace gcad {
     };
 
     struct solver_t {
+        // TODO: take span as argument instead of vector
         unsigned choose(const vector<unsigned> &information, unsigned maximum);
         void score(
             const vector<unsigned> &information, unsigned move, unsigned value

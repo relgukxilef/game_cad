@@ -121,7 +121,7 @@ int main() {
 
             cout << iteration * 100 / size << "%\r";
         }
-        computer.solve(&solver);
+        // TODO: call computer.input with best move from hypothetical
         cout << endl;
     }
 }
