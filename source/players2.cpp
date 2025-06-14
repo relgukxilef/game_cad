@@ -78,9 +78,7 @@ namespace gcad {
     void player2_ptr::input(unsigned value) {
         auto &player = players->player_infos[index];
         player.active = false;
-        players->players.filter.players[index].moves.push_back({
-            players->players.current.players[index].output, value
-        });
+        players->players[index].input(value);
     }
 
     bool player2_ptr::active() {
@@ -93,18 +91,9 @@ namespace gcad {
     }
 
     players2_t player2_ptr::sample(solver_t *solver) {
-        players2_t p(players->players.current.players.size(), solver);
+        players2_t p(players->players.size() - 1, solver);
         p.players = players->players[index].sample(solver);
         return p;
-    }
-
-    void player2_ptr::solve(solver_t *solver) {
-        input(
-            solver->choose(
-                players->players.current.players[index].output, 
-                players->players.current_choice
-            )
-        );
     }
 
     players2_t::players2_t(unsigned player_count, solver_t *solver) : 

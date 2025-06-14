@@ -5,19 +5,24 @@
 namespace gcad {
 
     optional<unsigned> player_ptr::choose(unsigned maximum) {
-        auto &moves = players->current.players[index].moves;
-        auto &output = players->current.players[index].output;
-        auto &filter_moves = players->filter.players[index].moves;
+        auto &player = players->players[index];
 
         optional<unsigned> move;
-        if (moves.size() < filter_moves.size()) {
-            move = filter_moves[moves.size()].input;
+        if (player.current_move < player.moves.size()) {
+            move = player.moves[player.current_move].move;
         } else if (players->solver) {
-            move = players->solver->choose(output, maximum);
+            // TODO: avoid copy
+            vector<unsigned> observations{
+                player.observations.begin(), 
+                player.observations.begin() + 
+                player.current_observation
+            };
+            move = players->solver->choose(observations, maximum);
+            input(*move);
         }
 
         if (move) {
-            moves.push_back({output, *move});
+            player.current_move++;
         }
 
         players->current_player = index;
@@ -27,45 +32,84 @@ namespace gcad {
     }
 
     void player_ptr::see(unsigned value) {
-        auto &current_output = players->current.players[index].output;
-        auto &filter_output = players->filter.players[index].output;
+        auto &player = players->players[index];
 
-        if (current_output.size() < filter_output.size() && 
-            value != filter_output[current_output.size()]) {
+        if (
+            player.current_observation < player.observations.size() && 
+            value != player.observations[player.current_observation]
+        ) {
             players->contradiction = true;
             return;
         }
-        current_output.push_back(value);
+        player.observations.push_back(value);
+        player.current_observation++;
     }
 
     void player_ptr::score(unsigned value) {
         if (!players->solver)
             return;
-        for (auto edge : players->current.players[index].moves) {
-            players->solver->score(edge.output, edge.input, value);
+        auto &player = players->players[index];
+        for (auto move : player.moves) {
+            // TODO: avoid copy
+            vector<unsigned> observations{
+                player.observations.begin(), 
+                player.observations.begin() + move.observations
+            };
+            players->solver->score(observations, move.move, value);
         }
     }
 
     players_t player_ptr::sample(solver_t *solver) {
-        players_t p(players->filter.players.size(), solver);
-        p.filter.players[index] = players->current.players[index];
-        return p;
+        // removes all moves from other players from the replay
+        // TODO: avoid copying, have caller use assignment operator, 
+        // and use vector::assign in operator
+        players_t copy = *players;
+        copy.solver = solver;
+        for (auto i = 0u; i < copy.players.size(); i++) {
+            if (i != index)
+                copy[i].resize(0);
+            copy.players[i].replay_end = copy.players[i].moves.size();
+        }
+        return copy;
     }
 
     players_t::players_t(unsigned number_players, solver_t *solver) {
         this->solver = solver;
-        current.players.resize(number_players);
-        filter.players.resize(number_players);
+        players.resize(number_players);
     }
     
+    void player_ptr::resize(unsigned size) {
+        auto &player = players->players[index];
+        player.moves.resize(size);
+        if (size == 0)
+            player.observations.clear();
+        else
+            player.observations.resize(player.moves.back().observations);
+        // TODO: better way to do this?
+        player.current_move = 0;
+        player.current_observation = 0;
+    }
+
+    void player_ptr::input(unsigned move) {
+        auto &player = players->players[index];
+        player.moves.push_back({move, player.current_observation});
+    }
+
+    float player_ptr::get_expected_score(unsigned choice) {
+        return 0;
+    }
+
     player_ptr players_t::operator[](unsigned index) {
         return {this, index};
     }
 
     void players_t::restart() {
-        for (auto &player : current.players) {
-            player.moves.clear();
-            player.output.clear();
+        for (auto i = 0; i < players.size(); i++) {
+            operator[](i).resize(players[i].replay_end);
         }
+    }
+
+    unsigned players_t::size() {
+        return players.size();
     }
 }

@@ -75,7 +75,6 @@ struct tic_tac_toe {
 };
 
 int main() {
-    // sketch of how I want to use the classes
     solver_t solver;
 
     for (auto iteration = 0u; iteration < 100; iteration++) {
@@ -122,7 +121,7 @@ int main() {
 
             cout << iteration * 100 / size << "%\r";
         }
-        computer.solve(&solver);
+        // TODO: call computer.input with best move from hypothetical
         cout << endl;
     }
 }

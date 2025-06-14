@@ -26,7 +26,6 @@ namespace gcad {
         void grid(unsigned columns);
 
         players2_t sample(solver_t *solver);
-        void solve(solver_t *solver);
 
         players2_t *players;
         unsigned index;
@@ -56,6 +55,7 @@ namespace gcad {
         unsigned columns = 1;
     };
 
+    // TODO: remove
     struct players2_t {
         players2_t(unsigned player_count = 1, solver_t *solver = nullptr);
         player2_ptr operator[](unsigned index);

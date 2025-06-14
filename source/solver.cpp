@@ -78,4 +78,10 @@ namespace gcad {
         move_score.squares += value * value;
         move_score.count++;
     }
+
+    statistics solver_t::get_statistics(
+        span<const unsigned> information, unsigned move
+    ) {
+        return {};
+    }
 }
