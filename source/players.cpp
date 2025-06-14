@@ -95,6 +95,10 @@ namespace gcad {
         player.moves.push_back({move, player.current_observation});
     }
 
+    float player_ptr::get_expected_score(unsigned choice) {
+        return 0;
+    }
+
     player_ptr players_t::operator[](unsigned index) {
         return {this, index};
     }
