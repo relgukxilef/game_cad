@@ -91,6 +91,10 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        if (ImGui::SmallButton("Restart")) {
+            game = {};
+        }
+
         for (int i = 0; i < 3; i++) {
             ImGui::PushID(i);
             ImGui::BeginGroup();
