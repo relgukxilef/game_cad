@@ -2,14 +2,10 @@
 #include <bit>
 #include <iostream>
 
-#include <gcad/players2.h>
-
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-
-using namespace gcad;
 
 // TODO: avoid code duplication
 const char *results[] = {"Loss", "Draw", "Win"};
@@ -17,7 +13,13 @@ const char *results[] = {"Loss", "Draw", "Win"};
 struct tic_tac_toe {
     uint16_t marks[2] = {0};
 
-    void update(players2_t &players) {
+    unsigned current_player() {
+        uint16_t occupied = marks[0] | marks[1];
+        auto player = std::popcount(occupied) % 2;
+        return player;
+    }
+
+    void update(unsigned choice) {
         uint16_t board = 0b111'111'111;
         uint16_t
             vertical = 0b001'001'001,
@@ -45,38 +47,17 @@ struct tic_tac_toe {
         }
         
         uint16_t occupied = marks[0] | marks[1];
-        auto player = std::popcount(occupied) % 2;
+        auto player = current_player();
 
         if (score != 1 || !(board & ~occupied)) {
-            players[0].score(results[2 - score], 2 - score);
-            players[1].score(results[score], score);
+            // TODO
             return;
         }
 
-        if (auto choice = players[player].choice("Cell index", 9)) {
-            if (occupied & (1 << *choice)) {
-                players[player].grid(1);
-                players[player].label("Invalid move");
-                return;
-            }
-            marks[player] |= (1 << *choice);
-
-            players[player].grid(3);
-            uint16_t m[2] = {marks[0], marks[1]};
-            for (int y = 0; y < 3; y++) {
-                for (int x = 0; x < 3; x++) {
-                    if (m[0] & 1) {
-                        players[1 - player].label("o");
-                    } else if (m[1] & 1) {
-                        players[1 - player].label("x");
-                    } else {
-                        players[1 - player].label("_");
-                    }
-                    m[0] >>= 1;
-                    m[1] >>= 1;
-                }
-            }
+        if (occupied & (1 << choice)) {
+            return;
         }
+        marks[player] |= (1 << choice);
     }
 };
 
@@ -93,6 +74,10 @@ int main() {
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
+
+    const char *X = "X", *O = "O", *EMPTY = "";
+
+    tic_tac_toe game;
     
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -101,7 +86,27 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // TODO
+        for (int i = 0; i < 3; i++) {
+            ImGui::PushID(i);
+            ImGui::BeginGroup();
+            for (int j = 0; j < 3; j++) {
+                auto symbol = EMPTY;
+                auto index = (i * 3 + j);
+                auto bit = 1 << index;
+                if (game.marks[0] & bit)
+                    symbol = X;
+                else if (game.marks[1] & bit)
+                    symbol = O;
+                ImGui::PushID(j);
+                if (ImGui::Button(symbol, {100, 100})) {
+                    game.update(index);
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
+            }
+            ImGui::EndGroup();
+            ImGui::PopID();
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
