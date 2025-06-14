@@ -31,6 +31,7 @@ struct tic_tac_toe {
             return;
         }
         marks[player] |= (1 << choice);
+        occupied = marks[0] | marks[1];
 
         uint16_t board = 0b111'111'111;
         uint16_t
