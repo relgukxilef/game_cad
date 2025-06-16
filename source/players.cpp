@@ -59,6 +59,16 @@ namespace gcad {
         }
     }
 
+    optional<unsigned> player_ptr::open_choice(unsigned maximum) {
+        auto value = choose(maximum);
+        if (value) {
+            for (auto i = 0u; i < players->size(); i++) {
+                (*players)[i].see(*value);
+            }
+        }
+        return value;
+    }
+
     players_t player_ptr::sample(solver_t *solver) {
         // removes all moves from other players from the replay
         // TODO: avoid copying, have caller use assignment operator, 

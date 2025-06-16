@@ -117,9 +117,7 @@ int main() {
                 ImGui::PushID(j);
                 if (ImGui::Button(symbol, {100, 100})) {
                     players[0].input(index);
-                    index = players[0].choose(9).value();
-                    players[0].see(index);
-                    players[1].see(index);
+                    index = players[0].open_choice(9).value();
                     game.update(index);
 
                     for (auto i = 0; i < 1000; i++) {
@@ -128,9 +126,7 @@ int main() {
                         while (!simulation.result) {
                             auto index = fork[
                                 simulation.current_player()
-                            ].choose(9).value();
-                            fork[0].see(index);
-                            fork[1].see(index);
+                            ].open_choice(9).value();
                             simulation.update(index);
                         }
                         fork[1].score(simulation.o_score);
@@ -138,9 +134,7 @@ int main() {
                     }
 
                     while (!game.result && game.current_player() != 0) {
-                        auto index = players[1].choose(9).value();
-                        players[0].see(index);
-                        players[1].see(index);
+                        auto index = players[1].open_choice(9).value();
                         game.update(index);
                     }
 
