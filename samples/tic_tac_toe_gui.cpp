@@ -7,11 +7,14 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include <gcad/players.h>
+
 const char *results[] = {"X wins", "Draw", "O wins"};
 
 struct tic_tac_toe {
     uint16_t marks[2] = {0};
     const char *result = nullptr;
+    unsigned o_score;
 
     unsigned current_player() {
         uint16_t occupied = marks[0] | marks[1];
@@ -61,6 +64,7 @@ struct tic_tac_toe {
         
         if (score != 1 || !(board & ~occupied)) {
             result = results[score];
+            o_score = score;
             return;
         }
     }
@@ -81,6 +85,9 @@ int main() {
     ImGui_ImplOpenGL3_Init("#version 130");
 
     tic_tac_toe game;
+
+    gcad::solver_t solver;
+    gcad::players_t players(2, &solver);
     
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -93,6 +100,7 @@ int main() {
 
         if (ImGui::SmallButton("Restart")) {
             game = {};
+            players = {2, &solver};
         }
 
         for (int i = 0; i < 3; i++) {
@@ -108,7 +116,34 @@ int main() {
                     symbol = "O";
                 ImGui::PushID(j);
                 if (ImGui::Button(symbol, {100, 100})) {
+                    players[0].input(index);
+                    index = players[0].choose(9).value();
+                    players[0].see(index);
+                    players[1].see(index);
                     game.update(index);
+
+                    for (auto i = 0; i < 1000; i++) {
+                        auto fork = players[1].sample(&solver);
+                        auto simulation = game;
+                        while (!simulation.result) {
+                            auto index = fork[
+                                simulation.current_player()
+                            ].choose(9).value();
+                            fork[0].see(index);
+                            fork[1].see(index);
+                            simulation.update(index);
+                        }
+                        fork[1].score(simulation.o_score);
+                        fork[0].score(2 - simulation.o_score);
+                    }
+
+                    while (!game.result && game.current_player() != 0) {
+                        auto index = players[1].choose(9).value();
+                        players[0].see(index);
+                        players[1].see(index);
+                        game.update(index);
+                    }
+
                 }
                 ImGui::PopID();
                 ImGui::SameLine();
