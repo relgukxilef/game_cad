@@ -33,7 +33,7 @@ namespace gcad {
         void see(unsigned value);
         void score(unsigned value);
 
-        optional<unsigned> open_choice(unsigned maximum);
+        optional<unsigned> choose_visible(unsigned maximum);
 
         // TODO: rename sample to fork
         players_t sample(solver_t *solver);

@@ -34,18 +34,20 @@ namespace gcad {
     void player_ptr::see(unsigned value) {
         auto &player = players->players[index];
 
-        if (
-            player.current_observation < player.observations.size() && 
-            value != player.observations[player.current_observation]
-        ) {
-            players->contradiction = true;
-            return;
+        if (player.current_observation < player.observations.size()) {
+            if (value != player.observations[player.current_observation]) {
+                players->contradiction = true;
+                return;
+            }
+        } else {
+            player.observations.push_back(value);
         }
-        player.observations.push_back(value);
         player.current_observation++;
     }
 
     void player_ptr::score(unsigned value) {
+        if (players->contradiction)
+            return;
         if (!players->solver)
             return;
         auto &player = players->players[index];
@@ -59,14 +61,28 @@ namespace gcad {
         }
     }
 
-    optional<unsigned> player_ptr::open_choice(unsigned maximum) {
-        auto value = choose(maximum);
-        if (value) {
-            for (auto i = 0u; i < players->size(); i++) {
-                (*players)[i].see(*value);
+    optional<unsigned> player_ptr::choose_visible(unsigned maximum) {
+        optional<unsigned> move;
+        
+        // since open choices are observed, we can just read the move from
+        // the observations
+        for (auto i = 0u; i < players->size(); i++) {
+            auto &player = players->players[i];
+            if (player.current_observation < player.observations.size()) {
+                move = player.observations[player.current_observation];
             }
         }
-        return value;
+
+        if (!move) {
+            move = choose(maximum);
+        }
+
+        if (move) {
+            for (auto i = 0u; i < players->size(); i++) {
+                (*players)[i].see(*move);
+            }
+        }
+        return move;
     }
 
     players_t player_ptr::sample(solver_t *solver) {
@@ -76,9 +92,12 @@ namespace gcad {
         players_t copy = *players;
         copy.solver = solver;
         for (auto i = 0u; i < copy.players.size(); i++) {
+            auto &player = copy.players[i];
             if (i != index)
                 copy[i].resize(0);
-            copy.players[i].replay_end = copy.players[i].moves.size();
+            player.current_move = 0;
+            player.current_observation = 0;
+            player.replay_end = copy.players[i].moves.size();
         }
         return copy;
     }

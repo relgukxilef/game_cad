@@ -117,16 +117,16 @@ int main() {
                 ImGui::PushID(j);
                 if (ImGui::Button(symbol, {100, 100})) {
                     players[0].input(index);
-                    index = players[0].open_choice(9).value();
+                    index = players[0].choose_visible(9).value();
                     game.update(index);
 
                     for (auto i = 0; i < 1000; i++) {
                         auto fork = players[1].sample(&solver);
-                        auto simulation = game;
+                        tic_tac_toe simulation;
                         while (!simulation.result) {
                             auto index = fork[
                                 simulation.current_player()
-                            ].open_choice(9).value();
+                            ].choose_visible(9).value();
                             simulation.update(index);
                         }
                         fork[1].score(simulation.o_score);
@@ -134,7 +134,7 @@ int main() {
                     }
 
                     while (!game.result && game.current_player() != 0) {
-                        auto index = players[1].open_choice(9).value();
+                        auto index = players[1].choose_visible(9).value();
                         game.update(index);
                     }
 
