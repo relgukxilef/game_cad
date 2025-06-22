@@ -33,14 +33,12 @@ namespace gcad {
         void see(unsigned value);
         void score(unsigned value);
 
-        optional<unsigned> choose_visible(unsigned maximum);
-
         // TODO: rename sample to fork
         players_t sample(solver_t *solver);
         void resize(unsigned size);
         void input(unsigned value);
-        float get_expected_score(unsigned choice);
-        
+        statistics get_expected_score(unsigned choice);
+
         players_t *players;
         unsigned index;
     };
@@ -52,7 +50,9 @@ namespace gcad {
         player_ptr operator[](unsigned index);
         void restart(); // TODO: remove
         unsigned size();
-        
+
+        void see_all(unsigned value);
+
         unsigned current_player = 0;
         unsigned current_choice = 0;
         bool contradiction = false;

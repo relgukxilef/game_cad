@@ -17,6 +17,15 @@ namespace gcad {
                 player.observations.begin() + 
                 player.current_observation
             };
+            if (
+                !player.moves.empty() && 
+                player.moves.back().observations == player.current_observation
+            ) {
+                // no new observations since last move, discourage
+                players->solver->score(
+                    observations, player.moves.back().move, 0
+                );
+            }
             move = players->solver->choose(observations, maximum);
             input(*move);
         }
@@ -51,38 +60,21 @@ namespace gcad {
         if (!players->solver)
             return;
         auto &player = players->players[index];
-        for (auto move : player.moves) {
+        unsigned previous_node_observations = ~0;
+        for (auto i = player.moves.size(); i > 0; i--) {
+            auto move = player.moves[i - 1];
             // TODO: avoid copy
             vector<unsigned> observations{
                 player.observations.begin(), 
                 player.observations.begin() + move.observations
             };
-            players->solver->score(observations, move.move, value);
-        }
-    }
-
-    optional<unsigned> player_ptr::choose_visible(unsigned maximum) {
-        optional<unsigned> move;
-        
-        // since open choices are observed, we can just read the move from
-        // the observations
-        for (auto i = 0u; i < players->size(); i++) {
-            auto &player = players->players[i];
-            if (player.current_observation < player.observations.size()) {
-                move = player.observations[player.current_observation];
+            if (move.observations == previous_node_observations) {
+                // skip moves that didn't advance the game
+                continue;
             }
+            players->solver->score(observations, move.move, value + 1);
+            previous_node_observations = move.observations;
         }
-
-        if (!move) {
-            move = choose(maximum);
-        }
-
-        if (move) {
-            for (auto i = 0u; i < players->size(); i++) {
-                (*players)[i].see(*move);
-            }
-        }
-        return move;
     }
 
     players_t player_ptr::sample(solver_t *solver) {
@@ -115,8 +107,8 @@ namespace gcad {
         else
             player.observations.resize(player.moves.back().observations);
         // TODO: better way to do this?
-        player.current_move = 0;
-        player.current_observation = 0;
+        player.current_move = player.moves.size();
+        player.current_observation = player.observations.size();
     }
 
     void player_ptr::input(unsigned move) {
@@ -124,8 +116,22 @@ namespace gcad {
         player.moves.push_back({move, player.current_observation});
     }
 
-    float player_ptr::get_expected_score(unsigned choice) {
-        return 0;
+    statistics player_ptr::get_expected_score(unsigned choice) {
+        auto &player = players->players[index];
+
+        if (!players->solver) {
+            return {};
+        }
+
+        // TODO: avoid copy
+        vector<unsigned> observations{
+            player.observations.begin(), 
+            player.observations.begin() + 
+            player.current_observation
+        };
+        auto statistics = players->solver->get_statistics(observations, choice);
+        statistics.mean -= 1;
+        return statistics;
     }
 
     player_ptr players_t::operator[](unsigned index) {
@@ -134,11 +140,20 @@ namespace gcad {
 
     void players_t::restart() {
         for (auto i = 0; i < players.size(); i++) {
-            operator[](i).resize(players[i].replay_end);
+            auto &player = players[i];
+            operator[](i).resize(player.replay_end);
+            player.current_move = 0;
+            player.current_observation = 0;
         }
     }
 
     unsigned players_t::size() {
         return players.size();
+    }
+
+    void players_t::see_all(unsigned move) {
+        for (auto i = 0u; i < size(); i++) {
+            (*this)[i].see(move);
+        }
     }
 }

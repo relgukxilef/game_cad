@@ -17,20 +17,19 @@ namespace gcad {
         unsigned offset = random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
-            auto move_score = node.move_score[move];
+            auto &score = node.move_score;
+            score.resize(maximum);
+            auto move_score = score[move];
 
             if (move_score.count == 0) {
-                continue;
+                // TODO: maybe skip with low probability for games with high
+                // branching factor
+                return move;
             }
 
             parent_count += move_score.count;
             parent_mean += move_score.sum;
             squares += move_score.squares;
-        }
-
-        // I don't know why this works well.
-        if (bernoulli_distribution(1.f / (sqrt(parent_count) + 1))(random)) {
-            return offset;
         }
 
         squares /= parent_count;
@@ -73,15 +72,37 @@ namespace gcad {
     void solver_t::score(
         const vector<unsigned> &information, unsigned move, unsigned value
     ) {
-        auto &move_score = information_node.at(information).move_score[move];
-        move_score.sum += value;
-        move_score.squares += value * value;
-        move_score.count++;
+        auto &move_score = information_node.at(information).move_score;
+        move_score.resize(max<unsigned>(move + 1, move_score.size()));
+        auto &score = move_score[move];
+        score.sum += value;
+        score.squares += value * value;
+        score.count++;
     }
 
     statistics solver_t::get_statistics(
-        span<const unsigned> information, unsigned move
+        const vector<unsigned> &information, unsigned move
     ) {
-        return {};
+        auto &node = information_node[information];
+
+        if (node.move_score.empty()) {
+            return {};
+        }
+
+        auto move_score = node.move_score[move];
+
+        if (move_score.count == 0) {
+            return {};
+        }
+
+        float mean = move_score.sum / move_score.count;
+        float deviation = sqrt(
+            (
+                move_score.squares / (move_score.count + 1) - 
+                mean * mean
+            ) / move_score.count
+        );
+
+        return {mean, deviation};
     }
 }

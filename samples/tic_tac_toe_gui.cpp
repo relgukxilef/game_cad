@@ -22,17 +22,21 @@ struct tic_tac_toe {
         return player;
     }
 
-    void update(unsigned choice) {
+    void update(gcad::players_t &replay) {
         if (result) {
             return;
         }
 
         uint16_t occupied = marks[0] | marks[1];
         auto player = current_player();
+        auto choice = replay[player].choose(9).value();
 
         if (occupied & (1 << choice)) {
             return;
         }
+
+        replay.see_all(choice);
+
         marks[player] |= (1 << choice);
         occupied = marks[0] | marks[1];
 
@@ -65,8 +69,10 @@ struct tic_tac_toe {
         if (score != 1 || !(board & ~occupied)) {
             result = results[score];
             o_score = score;
-            return;
+            replay[0].score(2 - o_score);
+            replay[1].score(o_score);
         }
+        return;
     }
 };
 
@@ -88,6 +94,14 @@ int main() {
 
     gcad::solver_t solver;
     gcad::players_t players(2, &solver);
+
+    for (auto i = 0; i < 1000; i++) {
+        gcad::players_t fork(2, &solver);
+        tic_tac_toe simulation;
+        while (!simulation.result) {
+            simulation.update(fork);
+        }
+    }
     
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -117,28 +131,37 @@ int main() {
                 ImGui::PushID(j);
                 if (ImGui::Button(symbol, {100, 100})) {
                     players[0].input(index);
-                    index = players[0].choose_visible(9).value();
-                    game.update(index);
+                    game.update(players);
 
                     for (auto i = 0; i < 1000; i++) {
                         auto fork = players[1].sample(&solver);
                         tic_tac_toe simulation;
                         while (!simulation.result) {
-                            auto index = fork[
-                                simulation.current_player()
-                            ].choose_visible(9).value();
-                            simulation.update(index);
+                            simulation.update(fork);
                         }
-                        fork[1].score(simulation.o_score);
-                        fork[0].score(2 - simulation.o_score);
                     }
 
                     while (!game.result && game.current_player() != 0) {
-                        auto index = players[1].choose_visible(9).value();
-                        game.update(index);
+                        game.update(players);
                     }
-
                 }
+
+                ImVec2 min = ImGui::GetItemRectMin();
+                ImVec2 max = ImGui::GetItemRectMax();
+
+                auto stats = players[0].get_expected_score(index);
+                float height = std::max(0.f, (max.y - min.y) * stats.mean / 2);
+                ImGui::GetWindowDrawList()->AddRectFilled(
+                    {min.x, max.y - height}, {min.x + 20, max.y},
+                    IM_COL32(150, 150, 150, 255)
+                );
+                float deviation = (max.y - min.y) * stats.deviation / 2;
+                ImGui::GetWindowDrawList()->AddRect(
+                    {min.x, max.y - height - deviation}, 
+                    {min.x + 20, max.y - height + deviation},
+                    IM_COL32(0, 200, 0, 255)
+                );
+
                 ImGui::PopID();
                 ImGui::SameLine();
             }

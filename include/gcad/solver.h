@@ -7,7 +7,7 @@ namespace gcad {
     using namespace std;
 
     struct statistics {
-        float mean, variance;
+        float mean, deviation;
     };
 
     struct hash {
@@ -30,7 +30,7 @@ namespace gcad {
             const vector<unsigned> &information, unsigned move, unsigned value
         );
         statistics get_statistics(
-            span<const unsigned> information, unsigned move
+            const vector<unsigned> &information, unsigned move
         );
 
         struct score_t {
