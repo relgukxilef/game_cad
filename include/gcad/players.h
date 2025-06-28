@@ -8,6 +8,7 @@ namespace gcad {
 
     struct move_t {
         unsigned move, observations;
+        unsigned weight; // 0 for moves that should be ignored during backprop
     };
 
     enum struct policy_t {
@@ -55,6 +56,7 @@ namespace gcad {
 
         unsigned current_player = 0;
         unsigned current_choice = 0;
+        unsigned constrained_players = 0;
         bool contradiction = false;
         vector<player_t> players;
         solver_t *solver;

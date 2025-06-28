@@ -27,7 +27,15 @@ namespace gcad {
                 );
             }
             move = players->solver->choose(observations, maximum);
-            input(*move);
+
+            unsigned weight = 1;
+
+            if (players->constrained_players > 0) {
+                // TODO: use solver to bias towards valid moves
+                weight = 0;
+            }
+
+            player.moves.push_back({*move, player.current_observation, weight});
         }
 
         if (move) {
@@ -48,6 +56,10 @@ namespace gcad {
                 players->contradiction = true;
                 return;
             }
+            if (player.current_observation == player.observations.size() - 1) {
+                // no more constraints
+                players->constrained_players--;
+            }
         } else {
             player.observations.push_back(value);
         }
@@ -63,15 +75,18 @@ namespace gcad {
         unsigned previous_node_observations = ~0;
         for (auto i = player.moves.size(); i > 0; i--) {
             auto move = player.moves[i - 1];
+            if (move.weight == 0) {
+                continue;
+            }
+            if (move.observations == previous_node_observations) {
+                // skip moves that didn't advance the game
+                continue;
+            }
             // TODO: avoid copy
             vector<unsigned> observations{
                 player.observations.begin(), 
                 player.observations.begin() + move.observations
             };
-            if (move.observations == previous_node_observations) {
-                // skip moves that didn't advance the game
-                continue;
-            }
             players->solver->score(observations, move.move, value + 1);
             previous_node_observations = move.observations;
         }
@@ -91,6 +106,7 @@ namespace gcad {
             player.current_observation = 0;
             player.replay_end = copy.players[i].moves.size();
         }
+        copy.constrained_players = 1;
         return copy;
     }
 
@@ -113,7 +129,7 @@ namespace gcad {
 
     void player_ptr::input(unsigned move) {
         auto &player = players->players[index];
-        player.moves.push_back({move, player.current_observation});
+        player.moves.push_back({move, player.current_observation, 0});
     }
 
     statistics player_ptr::get_expected_score(unsigned choice) {
