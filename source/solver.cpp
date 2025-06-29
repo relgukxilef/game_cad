@@ -11,7 +11,6 @@ namespace gcad {
             return random() % maximum;
         }
 
-        float parent_count = 0;
         float parent_mean = 0;
         float squares = 0;
         unsigned offset = random() % maximum;
@@ -27,13 +26,12 @@ namespace gcad {
                 return move;
             }
 
-            parent_count += move_score.count;
-            parent_mean += move_score.sum;
-            squares += move_score.squares;
+            parent_mean += move_score.sum / move_score.count;
+            squares += move_score.squares / move_score.count;
         }
 
-        squares /= parent_count;
-        parent_mean /= parent_count;
+        squares /= maximum;
+        parent_mean /= maximum;
 
         // Thompson sampling
         unsigned best_move = offset;
