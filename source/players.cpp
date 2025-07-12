@@ -32,6 +32,10 @@ namespace gcad {
 
             if (players->constrained_players > 0) {
                 // TODO: use solver to bias towards valid moves
+                // Nodes with unknown validity must have the same likelihood as
+                // nodes with 100% validity or it will get stuck on the first 
+                // nodes it explores
+                // this has to be done jointly with Thompson sampling 
                 weight = 0;
             }
 

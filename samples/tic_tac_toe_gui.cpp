@@ -78,7 +78,7 @@ struct tic_tac_toe {
 
 int main() {
     glfwInit();
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Game GUI", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Game CAD", NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 

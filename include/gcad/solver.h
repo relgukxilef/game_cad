@@ -7,14 +7,20 @@ namespace gcad {
     using namespace std;
 
     struct statistics {
-        float mean, deviation;
+        // TODO: maybe use Welford method for more accurate streaming variance
+        float mean = 0, deviation = 0;
+    };
+
+    struct importance {
+        // bias-corrected
+        float failures = 0, successes = 0;
     };
 
     struct hash {
         size_t operator()(span<const unsigned> v) const {
             size_t hash = 0;
             for (auto e : v) {
-                hash = hash * 238857403 + e;
+                hash = (hash + e) * 13552659750178043939ull;
             }
             return hash;
         }
@@ -26,6 +32,10 @@ namespace gcad {
     struct solver_t {
         // TODO: take span as argument instead of vector
         unsigned choose(const vector<unsigned> &information, unsigned maximum);
+        unsigned choose(
+            const vector<unsigned> &information, 
+            const vector<unsigned> &constraints, unsigned maximum
+        );
         void score(
             const vector<unsigned> &information, unsigned move, unsigned value
         );
@@ -43,6 +53,9 @@ namespace gcad {
         };
 
         unordered_map<vector<unsigned>, node, hash> information_node;
+        // Given a player index and that players observations and moves, 
+        unordered_map<vector<unsigned>, vector<importance>, hash> 
+            importance_node;
         std::minstd_rand random;
     };
 }

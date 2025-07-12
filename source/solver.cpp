@@ -6,18 +6,15 @@ namespace gcad {
     ) {
         auto &node = information_node[information];
 
-        if (node.move_score.empty()) {
-            node.move_score.resize(maximum);
-            return random() % maximum;
-        }
+        auto &score = node.move_score;
 
+        score.resize(maximum);
+        
         float parent_mean = 0;
-        float squares = 0;
+        float parent_squares = 0;
         unsigned offset = random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
-            auto &score = node.move_score;
-            score.resize(maximum);
             auto move_score = score[move];
 
             if (move_score.count == 0) {
@@ -27,39 +24,47 @@ namespace gcad {
             }
 
             parent_mean += move_score.sum / move_score.count;
-            squares += move_score.squares / move_score.count;
+            parent_squares += move_score.squares / move_score.count;
         }
 
-        squares /= maximum;
+        parent_squares /= maximum;
         parent_mean /= maximum;
 
-        // Thompson sampling
-        unsigned best_move = offset;
-        float best_score = 0;
-        for (auto i = 0u; i < maximum; i++) {
-            auto move = (offset + i) % maximum;
-            auto move_score = node.move_score[move];
-
-            if (move_score.count == 0) {
-                continue;
-            }
-
+        float max_mean = 0;
+        float mean_variance = 0;
+        for (auto move = 0u; move < maximum; move++) {
+            auto move_score = score[move];
             float mean = 
                 (move_score.sum + parent_mean) / (move_score.count + 1);
-            float deviation = sqrt(
-                (
-                    (move_score.squares + squares) / (move_score.count + 1) - 
-                    mean * mean
-                ) / move_score.count
-            );
+            float variance = (
+                (move_score.squares + parent_squares) / (move_score.count + 1) - 
+                mean * mean
+            ) / move_score.count;
+            
+            mean_variance += variance;
 
-            float score = 
-                normal_distribution<float>()(random) * 
-                deviation +
-                mean;
+            if (mean > max_mean) {
+                max_mean = mean;
+            }
+        }
 
-            if (score > best_score) {
-                best_score = score;
+        mean_variance /= maximum;
+
+        float sum = 0;
+        unsigned best_move = 0;
+
+        for (auto move = 0u; move < maximum; move++) {
+            auto move_score = node.move_score[move];
+            float mean = 
+                (move_score.sum + parent_mean) / (move_score.count + 1);
+            // Approximate Thompson sampling with normal distributions
+            float weight = erf(
+                (mean - max_mean) / sqrt(max(2 * mean_variance, 1e-9f)) * 2
+            ) / 2 + 0.5;
+            weight = max(weight, 1e-9f);
+            sum += weight;
+
+            if (bernoulli_distribution(weight / sum)(random)) {
                 best_move = move;
             }
         }
