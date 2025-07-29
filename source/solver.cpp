@@ -57,10 +57,15 @@ namespace gcad {
             auto move_score = node.move_score[move];
             float mean = 
                 (move_score.sum + parent_mean) / (move_score.count + 1);
-            // Approximate Thompson sampling with normal distributions
-            float weight = erf(
-                (mean - max_mean) / sqrt(max(2 * mean_variance, 1e-9f)) * 2
-            ) / 2 + 0.5;
+            // This matches Thompson sampling with normal distributions
+            // for binary choices, and is smooth otherwise.
+            // Transformed for robustness.
+            // Using the variance of the current move breaks the weight of the
+            // best move.
+            float flipped_erfc = erfc(
+                -(mean - max_mean) / sqrt(max(2 * mean_variance, 1e-9f))
+            );
+            float weight = flipped_erfc / (2 - flipped_erfc);
             weight = max(weight, 1e-9f);
             sum += weight;
 
