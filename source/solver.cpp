@@ -1,59 +1,80 @@
 #include <gcad/solver.h>
 
+using namespace std;
+
 namespace gcad {
-    unsigned solver_t::choose(
-        const vector<unsigned> &information, unsigned maximum
+    solution_t solver_t::choose(
+        const vector<unsigned> &information, unsigned maximum,
+        uint64_t mask
+    ) {
+        return choose(information, {}, maximum, mask);
+    }
+
+    solution_t solver_t::choose(
+        const vector<unsigned> &information, 
+        const vector<unsigned> &constraints, unsigned maximum,
+        uint64_t mask
     ) {
         auto &node = information_node[information];
 
         auto &score = node.move_score;
 
         score.resize(maximum);
+        unsigned count = 0;
         
         float parent_mean = 0;
-        float parent_squares = 0;
         unsigned offset = random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
+            if (~mask & (1ull << move))
+                continue;
             auto move_score = score[move];
 
             if (move_score.count == 0) {
                 // TODO: maybe skip with low probability for games with high
                 // branching factor
-                return move;
+                return {1.f / maximum, 1.f / maximum, move};
             }
 
             parent_mean += move_score.sum / move_score.count;
-            parent_squares += move_score.squares / move_score.count;
+            count++;
         }
 
-        parent_squares /= maximum;
-        parent_mean /= maximum;
+        parent_mean /= count;
 
         float max_mean = 0;
-        float mean_variance = 0;
+        float max_variance = 0;
         for (auto move = 0u; move < maximum; move++) {
+            if (~mask & (1ull << move))
+                continue;
             auto move_score = score[move];
             float mean = 
                 (move_score.sum + parent_mean) / (move_score.count + 1);
             float variance = (
-                (move_score.squares + parent_squares) / (move_score.count + 1) - 
+                (move_score.squares + parent_mean * parent_mean) / 
+                (move_score.count + 1) - 
                 mean * mean
-            ) / move_score.count;
+            );
+            //variance = variance / move_score.count;
+            // TODO
             
-            mean_variance += variance;
+            if (variance > max_variance) {
+                max_variance = variance;
+            }
 
             if (mean > max_mean) {
                 max_mean = mean;
             }
         }
 
-        mean_variance /= maximum;
-
-        float sum = 0;
-        unsigned best_move = 0;
+        auto &bias = importance_node[constraints];
+        bias.resize(maximum);
+        float sum = 0, importance_sum = 0;
+        solution_t best_move = {1.f, 1.f, 0};
 
         for (auto move = 0u; move < maximum; move++) {
+            if (~mask & (1ull << move))
+                continue;
             auto move_score = node.move_score[move];
             float mean = 
                 (move_score.sum + parent_mean) / (move_score.count + 1);
@@ -63,29 +84,38 @@ namespace gcad {
             // Using the variance of the current move breaks the weight of the
             // best move.
             float flipped_erfc = erfc(
-                -(mean - max_mean) / sqrt(max(2 * mean_variance, 1e-9f))
+                (max_mean - mean) / sqrt(max(2 * max_variance, 1e-9f))
             );
-            float weight = flipped_erfc / (2 - flipped_erfc);
+            float strength = flipped_erfc / (2 - flipped_erfc);
+            float plausibility = bias[move] + 1;
+            importance_sum += plausibility;
+            float weight = strength * plausibility;
             weight = max(weight, 1e-9f);
             sum += weight;
 
             if (bernoulli_distribution(weight / sum)(random)) {
-                best_move = move;
+                best_move = {weight, plausibility, move};
             }
         }
+
+        best_move.plausibility /= importance_sum;
+        best_move.bias /= sum;
 
         return best_move;
     }
 
     void solver_t::score(
-        const vector<unsigned> &information, unsigned move, unsigned value
+        const vector<unsigned> &information, unsigned move, unsigned value,
+        float weight
     ) {
         auto &move_score = information_node.at(information).move_score;
         move_score.resize(max<unsigned>(move + 1, move_score.size()));
         auto &score = move_score[move];
-        score.sum += value;
-        score.squares += value * value;
-        score.count++;
+        score.sum += value * weight;
+        score.squares += value * value * weight;
+        score.count += weight;
+        // TODO: mark this node as reachable from observations
+        // Is it even possible to mark nodes contradicting expected observations
     }
 
     statistics solver_t::get_statistics(
@@ -96,6 +126,7 @@ namespace gcad {
         if (node.move_score.empty()) {
             return {};
         }
+        node.move_score.resize(max<size_t>(node.move_score.size(), move + 1));
 
         auto move_score = node.move_score[move];
 
@@ -112,5 +143,14 @@ namespace gcad {
         );
 
         return {mean, deviation};
+    }
+
+    void solver_t::bias(
+        const vector<unsigned> &constraints, unsigned move,
+        float weight
+    ) {
+        auto& node = importance_node[constraints];
+        node.resize(max<unsigned>(move + 1, node.size()));
+        node[move] += weight;
     }
 }

@@ -2,14 +2,42 @@
 
 #include <limits>
 
-namespace gcad {
+using namespace std;
 
-    optional<unsigned> player_ptr::choose(unsigned maximum) {
+namespace gcad {
+    vector<unsigned> encode_bias(
+        vector<unsigned> &observations, 
+        vector<unsigned> &assumptions,
+        size_t prefix_length
+    ) {
+        vector<unsigned> result;
+        result.push_back(observations.size());
+        result.insert(result.end(), observations.begin(), observations.end());
+        result.insert(
+            result.end(), assumptions.begin(), 
+            assumptions.begin() + prefix_length
+        );
+        return result;
+    }
+
+    vector<unsigned> encode_bias(
+        vector<unsigned> &observations, 
+        vector<unsigned> &assumptions
+    ) {
+        return encode_bias(observations, assumptions, assumptions.size());
+    }
+
+    optional<unsigned> player_ptr::choose(unsigned maximum, uint64_t mask) {
         auto &player = players->players[index];
 
         optional<unsigned> move;
+        float bias_weight = 0;
+
         if (player.current_move < player.moves.size()) {
             move = player.moves[player.current_move].move;
+            // Replay can't contain packed moves as the mask is not known at the
+            // call to input
+
         } else if (players->solver) {
             // TODO: avoid copy
             vector<unsigned> observations{
@@ -17,32 +45,37 @@ namespace gcad {
                 player.observations.begin() + 
                 player.current_observation
             };
-            if (
-                !player.moves.empty() && 
-                player.moves.back().observations == player.current_observation
-            ) {
-                // no new observations since last move, discourage
-                players->solver->score(
-                    observations, player.moves.back().move, 0
-                );
-            }
-            move = players->solver->choose(observations, maximum);
 
-            unsigned weight = 1;
+            float weight;
+            solution_t solution;
 
-            if (players->constrained_players > 0) {
-                // TODO: use solver to bias towards valid moves
-                // Nodes with unknown validity must have the same likelihood as
-                // nodes with 100% validity or it will get stuck on the first 
-                // nodes it explores
+            if (players->constrained) {
                 // this has to be done jointly with Thompson sampling 
-                weight = 0;
+                auto constrained_player = players->constrained_player;
+                solution = players->solver->choose(
+                    observations, 
+                    encode_bias(
+                        players->players[constrained_player].observations,
+                        players->assumed_moves
+                    ), 
+                    maximum, mask
+                );
+
+            } else {
+                solution = players->solver->choose(observations, maximum, mask);
             }
 
+            move = solution.move;
+            weight = 1.f / solution.plausibility;
+            bias_weight = 1.f / solution.bias;
+
+            // TODO: let player see choice?
             player.moves.push_back({*move, player.current_observation, weight});
         }
 
         if (move) {
+            players->assumed_moves.push_back(*move);
+            players->assumed_moves_weights.push_back(bias_weight);
             player.current_move++;
         }
 
@@ -54,45 +87,49 @@ namespace gcad {
 
     void player_ptr::see(unsigned value) {
         auto &player = players->players[index];
-
+            
         if (player.current_observation < player.observations.size()) {
             if (value != player.observations[player.current_observation]) {
                 players->contradiction = true;
-                return;
             }
             if (player.current_observation == player.observations.size() - 1) {
                 // no more constraints
-                players->constrained_players--;
+                players->constrained = false;
             }
         } else {
             player.observations.push_back(value);
         }
         player.current_observation++;
+    
+        if (players->contradiction)
+            return; // TODO: need to split up expected and actual observations
+        for (auto i = 0; i < players->assumed_moves.size(); i++) {
+            players->solver->bias(
+                encode_bias(
+                    player.observations, 
+                    players->assumed_moves,
+                    i
+                ),
+                players->assumed_moves[i],
+                players->assumed_moves_weights[i]
+            );
+        }
     }
 
     void player_ptr::score(unsigned value) {
-        if (players->contradiction)
-            return;
         if (!players->solver)
             return;
         auto &player = players->players[index];
-        unsigned previous_node_observations = ~0;
-        for (auto i = player.moves.size(); i > 0; i--) {
-            auto move = player.moves[i - 1];
-            if (move.weight == 0) {
-                continue;
-            }
-            if (move.observations == previous_node_observations) {
-                // skip moves that didn't advance the game
-                continue;
-            }
+        for (auto i = 0; i < player.moves.size(); i++) {
+            auto move = player.moves[i];
             // TODO: avoid copy
             vector<unsigned> observations{
                 player.observations.begin(), 
                 player.observations.begin() + move.observations
             };
-            players->solver->score(observations, move.move, value + 1);
-            previous_node_observations = move.observations;
+            players->solver->score(
+                observations, move.move, value + 1, move.weight
+            );
         }
     }
 
@@ -102,15 +139,18 @@ namespace gcad {
         // and use vector::assign in operator
         players_t copy = *players;
         copy.solver = solver;
+        copy.assumed_moves.clear();
+        copy.assumed_moves_weights.clear();
         for (auto i = 0u; i < copy.players.size(); i++) {
             auto &player = copy.players[i];
             if (i != index)
                 copy[i].resize(0);
             player.current_move = 0;
             player.current_observation = 0;
-            player.replay_end = copy.players[i].moves.size();
+            player.replay_end = (unsigned)copy.players[i].moves.size();
         }
-        copy.constrained_players = 1;
+        copy.constrained = true;
+        copy.constrained_player = index;
         return copy;
     }
 
@@ -165,6 +205,8 @@ namespace gcad {
             player.current_move = 0;
             player.current_observation = 0;
         }
+        assumed_moves.clear();
+        assumed_moves_weights.clear();
     }
 
     unsigned players_t::size() {

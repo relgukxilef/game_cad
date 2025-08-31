@@ -29,7 +29,7 @@ struct tic_tac_toe {
 
         uint16_t occupied = marks[0] | marks[1];
         auto player = current_player();
-        auto choice = replay[player].choose(9).value();
+        auto choice = replay[player].choose(9, ~occupied).value();
 
         if (occupied & (1 << choice)) {
             return;

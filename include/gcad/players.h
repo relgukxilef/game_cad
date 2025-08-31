@@ -4,23 +4,17 @@
 #include "solver.h"
 
 namespace gcad {
-    using namespace std;
-
     struct move_t {
         unsigned move, observations;
-        unsigned weight; // 0 for moves that should be ignored during backprop
-    };
-
-    enum struct policy_t {
-        best, explore, random,
+        float weight; // 0 for moves that should be ignored during backprop
     };
 
     struct player_t {
         // stores a replay and the position in the replay
         // moves selected by the solver are added at the end of the replay
         // this serves as a constraint on the sampled games
-        vector<unsigned> observations;
-        vector<move_t> moves;
+        std::vector<unsigned> observations;
+        std::vector<move_t> moves;
         unsigned current_move = 0;
         unsigned current_observation = 0;
         unsigned replay_end = 0; // TODO: remove
@@ -30,7 +24,7 @@ namespace gcad {
 
     struct player_ptr {
         // TODO: maybe choose should return unsigned
-        optional<unsigned> choose(unsigned maximum);
+        std::optional<unsigned> choose(unsigned maximum, uint64_t mask = ~0);
         void see(unsigned value);
         void score(unsigned value);
 
@@ -56,9 +50,13 @@ namespace gcad {
 
         unsigned current_player = 0;
         unsigned current_choice = 0;
-        unsigned constrained_players = 0;
+        bool constrained = false;
+        unsigned constrained_player = 0;
         bool contradiction = false;
-        vector<player_t> players;
+        std::vector<player_t> players;
+        std::vector<unsigned> assumed_moves;
+        std::vector<float> assumed_moves_weights;
+
         solver_t *solver;
     };
 }
