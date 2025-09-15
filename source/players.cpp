@@ -116,11 +116,19 @@ namespace gcad {
         }
     }
 
-    void player_ptr::score(unsigned value) {
+    void player_ptr::score(float value) {
         if (!players->solver)
             return;
         auto &player = players->players[index];
-        for (auto i = 0; i < player.moves.size(); i++) {
+        // score leaf
+        players->solver->score(
+            player.observations, player.moves.back().move, 
+            value + 1, player.moves.back().weight, true
+        );
+        value = players->solver->get_statistics(
+            player.observations, player.moves.back().move
+        ).mean;
+        for (auto i = 0; i < player.moves.size() - 1; i++) {
             auto move = player.moves[i];
             // TODO: avoid copy
             vector<unsigned> observations{
@@ -128,7 +136,7 @@ namespace gcad {
                 player.observations.begin() + move.observations
             };
             players->solver->score(
-                observations, move.move, value + 1, move.weight
+                observations, move.move, value, move.weight
             );
         }
     }

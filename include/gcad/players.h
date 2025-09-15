@@ -26,7 +26,7 @@ namespace gcad {
         // TODO: maybe choose should return unsigned
         std::optional<unsigned> choose(unsigned maximum, uint64_t mask = ~0);
         void see(unsigned value);
-        void score(unsigned value);
+        void score(float value);
 
         // TODO: rename sample to fork
         players_t sample(solver_t *solver);

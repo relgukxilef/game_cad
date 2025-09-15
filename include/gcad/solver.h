@@ -41,7 +41,7 @@ namespace gcad {
         );
         void score(
             const std::vector<unsigned> &information, unsigned move, 
-            unsigned value, float weight = 1.0f
+            float value, float weight = 1.0f, bool leaf = false
         );
         statistics get_statistics(
             const std::vector<unsigned> &information, unsigned move
@@ -54,6 +54,7 @@ namespace gcad {
 
         struct score_t {
             float sum = 0, squares = 0, count = 0;
+            bool leaf = false;
         };
 
         struct node {

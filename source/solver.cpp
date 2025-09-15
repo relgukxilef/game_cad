@@ -55,16 +55,15 @@ namespace gcad {
                 (move_score.count + 1) - 
                 mean * mean
             );
-            //variance = variance / move_score.count;
-            // TODO
+            variance = max(variance, 1.0f/12); // expected quantization noise
+            if (move_score.leaf) {
+                variance = variance / move_score.count;
+            }
+            // Bessel correction with 1 virtual sample
+            variance *= (move_score.count + 1) / move_score.count;
             
-            if (variance > max_variance) {
-                max_variance = variance;
-            }
-
-            if (mean > max_mean) {
-                max_mean = mean;
-            }
+            max_variance = max(max_variance, variance);
+            max_mean = max(max_mean, mean);
         }
 
         auto &bias = importance_node[constraints];
@@ -105,8 +104,8 @@ namespace gcad {
     }
 
     void solver_t::score(
-        const vector<unsigned> &information, unsigned move, unsigned value,
-        float weight
+        const vector<unsigned> &information, unsigned move, float value,
+        float weight, bool leaf
     ) {
         auto &move_score = information_node.at(information).move_score;
         move_score.resize(max<unsigned>(move + 1, move_score.size()));
@@ -114,8 +113,7 @@ namespace gcad {
         score.sum += value * weight;
         score.squares += value * value * weight;
         score.count += weight;
-        // TODO: mark this node as reachable from observations
-        // Is it even possible to mark nodes contradicting expected observations
+        score.leaf = leaf;
     }
 
     statistics solver_t::get_statistics(
