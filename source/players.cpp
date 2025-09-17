@@ -121,17 +121,21 @@ namespace gcad {
             return;
         auto &player = players->players[index];
         // score leaf
+        vector<unsigned> observations{
+            player.observations.begin(), 
+            player.observations.begin() + player.moves.back().observations
+        };
         players->solver->score(
-            player.observations, player.moves.back().move, 
+            observations, player.moves.back().move, 
             value + 1, player.moves.back().weight, true
         );
         value = players->solver->get_statistics(
-            player.observations, player.moves.back().move
+            observations, player.moves.back().move
         ).mean;
         for (auto i = 0; i < player.moves.size() - 1; i++) {
             auto move = player.moves[i];
             // TODO: avoid copy
-            vector<unsigned> observations{
+            observations = {
                 player.observations.begin(), 
                 player.observations.begin() + move.observations
             };
