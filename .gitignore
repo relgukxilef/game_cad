@@ -7,5 +7,6 @@
 !*.cpp
 !*.h
 !CMakeLists.txt
+!*.md
 
 build
