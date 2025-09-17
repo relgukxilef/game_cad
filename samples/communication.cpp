@@ -2,15 +2,15 @@
 #include <array>
 #include <cassert>
 
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 struct communication {
     int secret, color, guess;
 
-    void update(gcad::players_t &players);
+    void update(gcad::replay_t &players);
 };
 
-void communication::update(gcad::players_t &players) {
+void communication::update(gcad::replay_t &players) {
     auto communicator = players[0];
     auto guesser = players[1];
 
@@ -37,7 +37,7 @@ void communication::update(gcad::players_t &players) {
 int main() {
     using namespace std;
     gcad::solver_t solver;
-    gcad::players_t players(2, &solver);
+    gcad::replay_t players(2, &solver);
 
     array<array<array<unsigned, 2>, 2>, 2> histogram{{{0}}};
 

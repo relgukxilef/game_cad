@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 using namespace std;
 
@@ -55,12 +55,12 @@ const vec2 checkpoints[2] = {
 };
 
 struct grid_gradient {
-    void update(gcad::players_t &players);
+    void update(gcad::replay_t &players);
     array<vec2, 100> path{0};
     unsigned time;
 };
 
-void grid_gradient::update(gcad::players_t &players) {
+void grid_gradient::update(gcad::replay_t &players) {
     auto player = players[0];
     vec2 position = checkpoints[1] * 16 + 8, velocity;
     vec2 cell = position / 16;
@@ -108,7 +108,7 @@ void grid_gradient::update(gcad::players_t &players) {
 
 int main() {
     gcad::solver_t solver;
-    gcad::players_t players(1, &solver);
+    gcad::replay_t players(1, &solver);
 
     grid_gradient game;
     for (auto iteration = 0u; iteration < 200'000; iteration++) {

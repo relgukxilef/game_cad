@@ -1,4 +1,4 @@
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 #include <cstdio>
 #include <cassert>
@@ -13,7 +13,7 @@ B  1  0
 ~B 0  0
 */
 
-void inference(players_t &players, unsigned histogram[]) {
+void inference(replay_t &players, unsigned histogram[]) {
     bool a = players[0].choose(2).value();
     bool b = players[0].choose(2).value();
     players[1].see(a && b);
@@ -29,7 +29,7 @@ int main() {
     unsigned histogram[4] = {};
     
     for (auto iteration = 0u; iteration < 240; iteration++) {
-        players_t players(2, &solver);
+        replay_t players(2, &solver);
         inference(players, histogram);
     }
 
@@ -39,10 +39,10 @@ int main() {
         i = 0;
     }
 
-    players_t players(2, &solver);
+    replay_t players(2, &solver);
     players[1].see(0);
     for (auto iteration = 0u; iteration < 240; iteration++) {
-        players_t replay = players[1].sample(&solver);
+        replay_t replay = players[1].sample(&solver);
         inference(replay, histogram);
     }
 

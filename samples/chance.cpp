@@ -2,17 +2,17 @@
 #include <array>
 #include <cassert>
 
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 using namespace std;
 
 struct chance {
     int row, column;
 
-    void update(gcad::players_t &players);
+    void update(gcad::replay_t &players);
 };
 
-void chance::update(gcad::players_t &players) {
+void chance::update(gcad::replay_t &players) {
     auto player = players[0];
 
     row = player.choose(2).value();
@@ -33,7 +33,7 @@ void chance::update(gcad::players_t &players) {
 
 int main() {
     gcad::solver_t solver;
-    gcad::players_t players(1, &solver);
+    gcad::replay_t players(1, &solver);
 
     array<unsigned, 4> histogram{0};
 

@@ -2,15 +2,15 @@
 #include <array>
 #include <cassert>
 
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 struct grid_search {
     int x = 5, y = 5;
 
-    void update(gcad::players_t &players);
+    void update(gcad::replay_t &players);
 };
 
-void grid_search::update(gcad::players_t &players) {
+void grid_search::update(gcad::replay_t &players) {
     auto player = players[0];
 
     for (auto step = 0u; step < 5; step++) {
@@ -37,7 +37,7 @@ void grid_search::update(gcad::players_t &players) {
 
 int main() {
     gcad::solver_t solver;
-    gcad::players_t players(1, &solver);
+    gcad::replay_t players(1, &solver);
 
     std::array<std::array<unsigned, 11>, 11> histogram{{0}};
 

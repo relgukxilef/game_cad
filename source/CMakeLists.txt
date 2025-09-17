@@ -1,7 +1,7 @@
 add_library(
     GameCAD STATIC
     solver.cpp
-    players.cpp
+    replay.cpp
     players2.cpp
 )
 

@@ -20,7 +20,7 @@ namespace gcad {
         unsigned replay_end = 0; // TODO: remove
     };
 
-    struct players_t;
+    struct replay_t;
 
     struct player_ptr {
         // TODO: maybe choose should return unsigned
@@ -29,18 +29,18 @@ namespace gcad {
         void score(float value);
 
         // TODO: rename sample to fork
-        players_t sample(solver_t *solver);
+        replay_t sample(solver_t *solver);
         void resize(unsigned size);
         void input(unsigned value);
         statistics get_expected_score(unsigned choice);
 
-        players_t *players;
+        replay_t *players;
         unsigned index;
     };
 
     // TODO: rename to replay_t
-    struct players_t {
-        players_t(unsigned number_players = 1, solver_t *solver = nullptr);
+    struct replay_t {
+        replay_t(unsigned number_players = 1, solver_t *solver = nullptr);
 
         player_ptr operator[](unsigned index);
         void restart(); // TODO: remove

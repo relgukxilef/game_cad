@@ -3,7 +3,7 @@
 #include <optional>
 #include <memory>
 
-#include "players.h"
+#include "replay.h"
 
 namespace gcad {
     using namespace std;
@@ -62,7 +62,7 @@ namespace gcad {
         unsigned random(unsigned maximum);
         void restart();
 
-        players_t players;
+        replay_t players;
         unordered_map<string_view, unsigned> labels;
         vector<player_info> player_infos;
     };

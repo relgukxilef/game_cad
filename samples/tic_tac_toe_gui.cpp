@@ -7,7 +7,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 const char *results[] = {"X wins", "Draw", "O wins"};
 
@@ -22,7 +22,7 @@ struct tic_tac_toe {
         return player;
     }
 
-    void update(gcad::players_t &replay) {
+    void update(gcad::replay_t &replay) {
         if (result) {
             return;
         }
@@ -93,10 +93,10 @@ int main() {
     tic_tac_toe game;
 
     gcad::solver_t solver;
-    gcad::players_t players(2, &solver);
+    gcad::replay_t players(2, &solver);
 
     for (auto i = 0; i < 1000; i++) {
-        gcad::players_t fork(2, &solver);
+        gcad::replay_t fork(2, &solver);
         tic_tac_toe simulation;
         while (!simulation.result) {
             simulation.update(fork);

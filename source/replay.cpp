@@ -1,4 +1,4 @@
-#include <gcad/players.h>
+#include <gcad/replay.h>
 
 #include <limits>
 
@@ -145,11 +145,11 @@ namespace gcad {
         }
     }
 
-    players_t player_ptr::sample(solver_t *solver) {
+    replay_t player_ptr::sample(solver_t *solver) {
         // removes all moves from other players from the replay
         // TODO: avoid copying, have caller use assignment operator, 
         // and use vector::assign in operator
-        players_t copy = *players;
+        replay_t copy = *players;
         copy.solver = solver;
         copy.assumed_moves.clear();
         copy.assumed_moves_weights.clear();
@@ -166,7 +166,7 @@ namespace gcad {
         return copy;
     }
 
-    players_t::players_t(unsigned number_players, solver_t *solver) {
+    replay_t::replay_t(unsigned number_players, solver_t *solver) {
         this->solver = solver;
         players.resize(number_players);
     }
@@ -206,11 +206,11 @@ namespace gcad {
         return statistics;
     }
 
-    player_ptr players_t::operator[](unsigned index) {
+    player_ptr replay_t::operator[](unsigned index) {
         return {this, index};
     }
 
-    void players_t::restart() {
+    void replay_t::restart() {
         for (auto i = 0; i < players.size(); i++) {
             auto &player = players[i];
             operator[](i).resize(player.replay_end);
@@ -221,11 +221,11 @@ namespace gcad {
         assumed_moves_weights.clear();
     }
 
-    unsigned players_t::size() {
+    unsigned replay_t::size() {
         return players.size();
     }
 
-    void players_t::see_all(unsigned move) {
+    void replay_t::see_all(unsigned move) {
         for (auto i = 0u; i < size(); i++) {
             (*this)[i].see(move);
         }
