@@ -3,6 +3,29 @@
 using namespace std;
 
 namespace gcad {
+    struct distribution {
+        void push_back(float x, float weight = 1.0f) {
+            sum += x * weight;
+            squares += x * x * weight;
+            count += weight;
+        }
+        void insert(distribution x, float weight = 1.0f) {
+            sum += x.sum * weight;
+            squares += x.squares * weight;
+            count += x.count * weight;
+        }
+        float mean() {
+            return sum / count;
+        }
+        float variance() {
+            return (squares - sum * sum / count) / (count - 1);
+        }
+        float mean_variance() {
+            return (squares - sum * sum / count) / (count - 1) / count;
+        }
+        float sum = 0, squares = 0, count = 0;
+    };
+
     solution_t solver_t::choose(
         const vector<unsigned> &information, unsigned maximum,
         uint64_t mask
@@ -20,9 +43,8 @@ namespace gcad {
         auto &score = node.move_score;
 
         score.resize(maximum);
-        unsigned count = 0;
-        
-        float parent_mean = 0;
+
+        distribution parent;
         unsigned offset = random() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
@@ -36,11 +58,8 @@ namespace gcad {
                 return {1.f / maximum, 1.f / maximum, move};
             }
 
-            parent_mean += move_score.sum / move_score.count;
-            count++;
+            parent.push_back(move_score.sum / move_score.count);
         }
-
-        parent_mean /= count;
 
         float max_mean = 0;
         float max_variance = 0;
@@ -48,19 +67,14 @@ namespace gcad {
             if (~mask & (1ull << move))
                 continue;
             auto move_score = score[move];
-            float mean = 
-                (move_score.sum + parent_mean) / (move_score.count + 1);
-            float variance = (
-                (move_score.squares + parent_mean * parent_mean) / 
-                (move_score.count + 1) - 
-                mean * mean
-            );
-            variance = max(variance, 1.0f/12); // expected quantization noise
+            distribution scores = 
+                {move_score.sum, move_score.squares, move_score.count};
+            scores.insert(parent, 1 / parent.count);
+            float mean = scores.mean();
+            float variance = scores.variance();
             if (move_score.leaf) {
-                variance = variance / move_score.count;
+                variance = scores.mean_variance();
             }
-            // Bessel correction with 1 virtual sample
-            variance *= (move_score.count + 1) / move_score.count;
             
             max_variance = max(max_variance, variance);
             max_mean = max(max_mean, mean);
@@ -75,8 +89,10 @@ namespace gcad {
             if (~mask & (1ull << move))
                 continue;
             auto move_score = node.move_score[move];
-            float mean = 
-                (move_score.sum + parent_mean) / (move_score.count + 1);
+            distribution scores = 
+                {move_score.sum, move_score.squares, move_score.count};
+            scores.insert(parent, 1 / parent.count);
+            float mean = scores.mean();
             // This matches Thompson sampling with normal distributions
             // for binary choices, and is smooth otherwise.
             // Transformed for robustness.
