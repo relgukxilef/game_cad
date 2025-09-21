@@ -55,8 +55,8 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_CXX_FLAGS=${{ matrix.sanitizer }}
-        -DCMAKE_EXE_LINKER_FLAGS=${{ matrix.sanitizer }}
+        -DCMAKE_CXX_FLAGS=-fsanitize=${{ matrix.sanitizer }}
+        -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=${{ matrix.sanitizer }}
         -S "${{ github.workspace }}"
 
     - name: Build
