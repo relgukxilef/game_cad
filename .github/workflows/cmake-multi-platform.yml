@@ -26,7 +26,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         build_type: [Debug]
         cpp_compiler: [g++, clang++, cl]
-        sanitizer: ["", address, undefined]
+        sanitizer: ["", -fsanitize=address, -fsanitize=undefined]
         include:
           - c_compiler: cl
             cpp_compiler: cl
@@ -38,9 +38,9 @@ jobs:
           - os: ubuntu-latest
             cpp_compiler: cl
           - cpp_compiler: cl
-            sanitizer: undefined # no supported by cl
+            sanitizer: -fsanitize=undefined # no supported by cl
           - os: windows-latest
-            sanitizer: address # doesn't work on GitHub runners
+            sanitizer: -fsanitize=address # doesn't work on GitHub runners
 
     steps:
     - uses: actions/checkout@v4
@@ -57,8 +57,8 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_CXX_FLAGS=-fsanitize=${{ matrix.sanitizer }}
-        -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=${{ matrix.sanitizer }}
+        -DCMAKE_CXX_FLAGS=${{ matrix.sanitizer }}
+        -DCMAKE_EXE_LINKER_FLAGS=${{ matrix.sanitizer }}
         -S "${{ github.workspace }}"
 
     - name: Build
