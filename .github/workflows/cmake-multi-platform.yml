@@ -26,7 +26,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         build_type: [Debug]
         cpp_compiler: [g++, clang++, cl]
-        sanitizer: [address, undefined]
+        sanitizer: ["", address, undefined]
         include:
           - c_compiler: cl
             cpp_compiler: cl
@@ -38,7 +38,9 @@ jobs:
           - os: ubuntu-latest
             cpp_compiler: cl
           - cpp_compiler: cl
-            sanitizer: undefined
+            sanitizer: undefined # no supported by cl
+          - os: windows-latest
+            sanitizer: address # doesn't work on GitHub runners
 
     steps:
     - uses: actions/checkout@v4
