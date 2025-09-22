@@ -26,6 +26,13 @@ namespace gcad {
         float sum = 0, squares = 0, count = 0;
     };
 
+    uint64_t hash(span<const unsigned> s) {
+        uint64_t h = 1;
+        for (auto e : s)
+            h = (h + e) * 13552659750178043939ull;
+        return h;
+    }
+
     template<class K, class V, class H>
     cache_t<K, V, H>::cache_t(unsigned log_size) : 
         keys(1ull << log_size), 
@@ -57,19 +64,19 @@ namespace gcad {
     {}
 
     solution_t solver_t::choose(
-        const vector<unsigned> &information, unsigned maximum,
+        span<const unsigned> information, unsigned maximum,
         uint64_t mask
     ) {
         return choose(information, {}, maximum, mask);
     }
 
     solution_t solver_t::choose(
-        const vector<unsigned> &information, 
-        const vector<unsigned> &constraints, unsigned maximum,
+        span<const unsigned> information, 
+        span<const unsigned> constraints, unsigned maximum,
         uint64_t mask
     ) {
         solver_t::node node;
-        information_node.get(node, information);
+        information_node.get(node, hash(information));
 
         auto &score = node.move_score;
 
@@ -112,7 +119,7 @@ namespace gcad {
         }
 
         vector<float> bias;
-        importance_node.get(bias, constraints);
+        importance_node.get(bias, hash(constraints));
         bias.resize(maximum);
         float sum = 0, importance_sum = 0;
         solution_t best_move = {1.f, 1.f, 0};
@@ -152,11 +159,11 @@ namespace gcad {
     }
 
     void solver_t::score(
-        const vector<unsigned> &information, unsigned move, float value,
+        span<const unsigned> information, unsigned move, float value,
         float weight, bool leaf
     ) {
         solver_t::node node;
-        information_node.get(node, information);
+        information_node.get(node, hash(information));
         auto &move_score = node.move_score;
         move_score.resize(max<unsigned>(move + 1, move_score.size()));
         auto &score = move_score[move];
@@ -164,14 +171,14 @@ namespace gcad {
         score.squares += value * value * weight;
         score.count += weight;
         score.leaf = leaf;
-        information_node.put(information, node);
+        information_node.put(hash(information), node);
     }
 
     statistics solver_t::get_statistics(
-        const vector<unsigned> &information, unsigned move
+        span<const unsigned> information, unsigned move
     ) {
         solver_t::node node;
-        information_node.get(node, information);
+        information_node.get(node, hash(information));
 
         if (node.move_score.empty()) {
             return {};
@@ -193,13 +200,13 @@ namespace gcad {
     }
 
     void solver_t::bias(
-        const vector<unsigned> &constraints, unsigned move,
+        span<const unsigned> constraints, unsigned move,
         float weight
     ) {
         vector<float> node;
-        importance_node.get(node, constraints);
+        importance_node.get(node, hash(constraints));
         node.resize(max<unsigned>(move + 1, node.size()));
         node[move] += weight;
-        importance_node.put(constraints, node);
+        importance_node.put(hash(constraints), node);
     }
 }
