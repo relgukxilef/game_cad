@@ -39,12 +39,8 @@ namespace gcad {
             // call to input
 
         } else if (players->solver) {
-            // TODO: avoid copy
-            vector<unsigned> observations{
-                player.observations.begin(), 
-                player.observations.begin() + 
-                player.current_observation
-            };
+            span<unsigned> observations(player.observations);
+            observations = observations.subspan(0, player.current_observation);
 
             float weight;
             solution_t solution;
@@ -121,26 +117,21 @@ namespace gcad {
             return;
         auto &player = players->players[index];
         // score leaf
-        vector<unsigned> observations{
-            player.observations.begin(), 
-            player.observations.begin() + player.moves.back().observations
-        };
+        span<unsigned> observations(player.observations);
         players->solver->score(
-            observations, player.moves.back().move, 
+            observations.subspan(0, player.moves.back().observations), 
+            player.moves.back().move, 
             value + 1, player.moves.back().weight, true
         );
         value = players->solver->get_statistics(
-            observations, player.moves.back().move
+            observations.subspan(0, player.moves.back().observations), 
+            player.moves.back().move
         ).mean;
         for (auto i = 0; i < player.moves.size() - 1; i++) {
             auto move = player.moves[i];
-            // TODO: avoid copy
-            observations = {
-                player.observations.begin(), 
-                player.observations.begin() + move.observations
-            };
             players->solver->score(
-                observations, move.move, value, move.weight
+                observations.subspan(0, move.observations), move.move, value, 
+                move.weight
             );
         }
     }
@@ -195,12 +186,8 @@ namespace gcad {
             return {};
         }
 
-        // TODO: avoid copy
-        vector<unsigned> observations{
-            player.observations.begin(), 
-            player.observations.begin() + 
-            player.current_observation
-        };
+        span<unsigned> observations(player.observations);
+        observations = observations.subspan(0, player.current_observation);
         auto statistics = players->solver->get_statistics(observations, choice);
         statistics.mean -= 1;
         return statistics;
