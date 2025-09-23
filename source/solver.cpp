@@ -26,6 +26,35 @@ namespace gcad {
         float sum = 0, squares = 0, count = 0;
     };
 
+    template<class K, class V, class H>
+    cache_t<K, V, H>::cache_t(unsigned log_size) : 
+        keys(1ull << log_size), 
+        values(1ull << log_size),
+        log_size(log_size)
+    {}
+
+    template<class K, class V, class H>
+    template<class T>
+    void cache_t<K, V, H>::get(V& v, const T& t) const {
+        std::size_t index = H::operator()(t) >> (64 - log_size);
+        if (keys[index] != t) {
+            v = V();
+        }
+        v = values[index];
+    }
+
+    template<class K, class V, class H>
+    template<class T>
+    void cache_t<K, V, H>::put(const T& t, const V& v) {
+        std::size_t index = H::operator()(t) >> (64 - log_size);
+        keys[index] = t;
+        values[index] = v;
+    }
+
+    solver_t::solver_t(unsigned log_size) : 
+        information_node(log_size), importance_node(log_size) 
+    {}
+
     solution_t solver_t::choose(
         const vector<unsigned> &information, unsigned maximum,
         uint64_t mask
@@ -38,7 +67,8 @@ namespace gcad {
         const vector<unsigned> &constraints, unsigned maximum,
         uint64_t mask
     ) {
-        auto &node = information_node[information];
+        solver_t::node node;
+        information_node.get(node, information);
 
         auto &score = node.move_score;
 
@@ -80,7 +110,8 @@ namespace gcad {
             max_mean = max(max_mean, mean);
         }
 
-        auto &bias = importance_node[constraints];
+        vector<float> bias;
+        importance_node.get(bias, constraints);
         bias.resize(maximum);
         float sum = 0, importance_sum = 0;
         solution_t best_move = {1.f, 1.f, 0};
@@ -123,19 +154,23 @@ namespace gcad {
         const vector<unsigned> &information, unsigned move, float value,
         float weight, bool leaf
     ) {
-        auto &move_score = information_node.at(information).move_score;
+        solver_t::node node;
+        information_node.get(node, information);
+        auto &move_score = node.move_score;
         move_score.resize(max<unsigned>(move + 1, move_score.size()));
         auto &score = move_score[move];
         score.sum += value * weight;
         score.squares += value * value * weight;
         score.count += weight;
         score.leaf = leaf;
+        information_node.put(information, node);
     }
 
     statistics solver_t::get_statistics(
         const vector<unsigned> &information, unsigned move
     ) {
-        auto &node = information_node[information];
+        solver_t::node node;
+        information_node.get(node, information);
 
         if (node.move_score.empty()) {
             return {};
@@ -148,23 +183,22 @@ namespace gcad {
             return {};
         }
 
-        float mean = move_score.sum / move_score.count;
-        float deviation = sqrt(
-            (
-                move_score.squares / (move_score.count + 1) - 
-                mean * mean
-            ) / move_score.count
-        );
+        distribution scores = 
+            {move_score.sum, move_score.squares, move_score.count};
+        float mean = scores.mean();
+        float variance = scores.variance();
 
-        return {mean, deviation};
+        return {mean, sqrt(variance)};
     }
 
     void solver_t::bias(
         const vector<unsigned> &constraints, unsigned move,
         float weight
     ) {
-        auto& node = importance_node[constraints];
+        vector<float> node;
+        importance_node.get(node, constraints);
         node.resize(max<unsigned>(move + 1, node.size()));
         node[move] += weight;
+        importance_node.put(constraints, node);
     }
 }

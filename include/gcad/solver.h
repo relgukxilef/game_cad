@@ -13,11 +13,20 @@ namespace gcad {
         float bias, plausibility;
         unsigned move;
     };
-    
+
+    template<class K, class V, class H>
+    struct cache_t : private H {
+        cache_t(unsigned log_size = 12);
+        template<class T> void get(V&, const T&) const;
+        template<class T> void put(const T&, const V&);
+        std::vector<K> keys;
+        std::vector<V> values;
+        std::size_t log_size;
+    };
 
     struct hash {
         size_t operator()(std::span<const unsigned> v) const {
-            size_t hash = 0;
+            size_t hash = 1;
             for (auto e : v) {
                 hash = (hash + e) * 13552659750178043939ull;
             }
@@ -29,6 +38,7 @@ namespace gcad {
     };
 
     struct solver_t {
+        solver_t(unsigned log_size = 12);
         // TODO: take span as argument instead of vector
         solution_t choose(
             const std::vector<unsigned> &information, unsigned maximum,
@@ -61,10 +71,10 @@ namespace gcad {
             std::vector<score_t> move_score;
         };
 
-        std::unordered_map<std::vector<unsigned>, node, hash> information_node;
+        cache_t<std::vector<unsigned>, node, hash> information_node;
         // Given a player index and that players observations and moves, 
         // bias-corrected
-        std::unordered_map<std::vector<unsigned>, std::vector<float>, hash> 
+        cache_t<std::vector<unsigned>, std::vector<float>, hash> 
             importance_node;
         std::minstd_rand random;
     };
