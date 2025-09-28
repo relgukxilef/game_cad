@@ -39,8 +39,9 @@ namespace gcad {
         std::size_t index = H::operator()(t) >> (64 - log_size);
         if (keys[index] != t) {
             v = V();
+        } else {
+            v = values[index];
         }
-        v = values[index];
     }
 
     template<class K, class V, class H>
