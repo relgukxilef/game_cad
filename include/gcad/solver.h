@@ -16,12 +16,13 @@ namespace gcad {
 
     template<class K, class V, class H = std::hash<K>>
     struct cache_t : private H {
-        cache_t(unsigned log_size = 12);
-        template<class T> void get(V&, const T&) const;
+        cache_t(unsigned log_size);
+        template<class T> const V& get(const T& t) const;
         template<class T> void put(const T&, const V&);
         std::vector<K> keys;
         std::vector<V> values;
         std::size_t log_size;
+        V default_value{};
     };
 
     struct hash {
@@ -74,5 +75,8 @@ namespace gcad {
         cache_t<std::uint64_t, node> information_node;
         cache_t<std::uint64_t, std::vector<float>> importance_node;
         std::minstd_rand random;
+
+        node current_node;
+        std::vector<float> current_bias;
     };
 }

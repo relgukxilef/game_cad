@@ -5,26 +5,29 @@
 using namespace std;
 
 namespace gcad {
-    vector<unsigned> encode_bias(
-        vector<unsigned> &observations, 
-        vector<unsigned> &assumptions,
-        size_t prefix_length
+    void encode_bias(
+        const vector<unsigned> &observations, 
+        const vector<unsigned> &assumptions,
+        size_t prefix_length,
+        vector<unsigned> &destination
     ) {
-        vector<unsigned> result;
-        result.push_back(observations.size());
-        result.insert(result.end(), observations.begin(), observations.end());
-        result.insert(
-            result.end(), assumptions.begin(), 
+        destination.clear();
+        destination.push_back(observations.size());
+        destination.insert(
+            destination.end(), observations.begin(), observations.end()
+        );
+        destination.insert(
+            destination.end(), assumptions.begin(), 
             assumptions.begin() + prefix_length
         );
-        return result;
     }
 
-    vector<unsigned> encode_bias(
-        vector<unsigned> &observations, 
-        vector<unsigned> &assumptions
+    void encode_bias(
+        const vector<unsigned> &observations, 
+        const vector<unsigned> &assumptions,
+        vector<unsigned> &destination
     ) {
-        return encode_bias(observations, assumptions, assumptions.size());
+        encode_bias(observations, assumptions, assumptions.size(), destination);
     }
 
     optional<unsigned> player_ptr::choose(unsigned maximum, uint64_t mask) {
@@ -48,12 +51,14 @@ namespace gcad {
             if (players->constrained) {
                 // this has to be done jointly with Thompson sampling 
                 auto constrained_player = players->constrained_player;
+                encode_bias(
+                    players->players[constrained_player].observations,
+                    players->assumed_moves,
+                    players->current_bias
+                );
                 solution = players->solver->choose(
                     observations, 
-                    encode_bias(
-                        players->players[constrained_player].observations,
-                        players->assumed_moves
-                    ), 
+                    players->current_bias, 
                     maximum, mask
                 );
 
@@ -100,12 +105,14 @@ namespace gcad {
         if (players->contradiction)
             return; // TODO: need to split up expected and actual observations
         for (auto i = 0; i < players->assumed_moves.size(); i++) {
+            encode_bias(
+                player.observations, 
+                players->assumed_moves,
+                i,
+                players->current_bias
+            );
             players->solver->bias(
-                encode_bias(
-                    player.observations, 
-                    players->assumed_moves,
-                    i
-                ),
+                players->current_bias,
                 players->assumed_moves[i],
                 players->assumed_moves_weights[i]
             );

@@ -42,12 +42,12 @@ namespace gcad {
 
     template<class K, class V, class H>
     template<class T>
-    void cache_t<K, V, H>::get(V& v, const T& t) const {
+    const V& cache_t<K, V, H>::get(const T& t) const {
         std::size_t index = H::operator()(t) >> (64 - log_size);
         if (keys[index] != t) {
-            v = V();
+            return default_value;
         } else {
-            v = values[index];
+            return values[index];
         }
     }
 
@@ -75,10 +75,9 @@ namespace gcad {
         span<const unsigned> constraints, unsigned maximum,
         uint64_t mask
     ) {
-        solver_t::node node;
-        information_node.get(node, hash(information));
+        current_node = information_node.get(hash(information));
 
-        auto &score = node.move_score;
+        auto &score = current_node.move_score;
 
         score.resize(maximum);
 
@@ -118,16 +117,15 @@ namespace gcad {
             max_mean = max(max_mean, mean);
         }
 
-        vector<float> bias;
-        importance_node.get(bias, hash(constraints));
-        bias.resize(maximum);
+        current_bias = importance_node.get(hash(constraints));
+        current_bias.resize(maximum);
         float sum = 0, importance_sum = 0;
         solution_t best_move = {1.f, 1.f, 0};
 
         for (auto move = 0u; move < maximum; move++) {
             if (~mask & (1ull << move))
                 continue;
-            auto move_score = node.move_score[move];
+            auto move_score = current_node.move_score[move];
             distribution scores = 
                 {move_score.sum, move_score.squares, move_score.count};
             scores.insert(parent, 1 / parent.count);
@@ -141,7 +139,7 @@ namespace gcad {
                 (max_mean - mean) / sqrt(max(2 * max_variance, 1e-9f))
             );
             float strength = flipped_erfc / (2 - flipped_erfc);
-            float plausibility = bias[move] + 1;
+            float plausibility = current_bias[move] + 1;
             importance_sum += plausibility;
             float weight = strength * plausibility;
             weight = max(weight, 1e-9f);
@@ -162,30 +160,28 @@ namespace gcad {
         span<const unsigned> information, unsigned move, float value,
         float weight, bool leaf
     ) {
-        solver_t::node node;
-        information_node.get(node, hash(information));
-        auto &move_score = node.move_score;
+        current_node = information_node.get(hash(information));
+        auto &move_score = current_node.move_score;
         move_score.resize(max<unsigned>(move + 1, move_score.size()));
         auto &score = move_score[move];
         score.sum += value * weight;
         score.squares += value * value * weight;
         score.count += weight;
         score.leaf = leaf;
-        information_node.put(hash(information), node);
+        information_node.put(hash(information), current_node);
     }
 
     statistics solver_t::get_statistics(
         span<const unsigned> information, unsigned move
     ) {
-        solver_t::node node;
-        information_node.get(node, hash(information));
+        current_node = information_node.get(hash(information));
 
-        if (node.move_score.empty()) {
+        if (current_node.move_score.empty()) {
             return {};
         }
-        node.move_score.resize(max<size_t>(node.move_score.size(), move + 1));
+        current_node.move_score.resize(max<size_t>(current_node.move_score.size(), move + 1));
 
-        auto move_score = node.move_score[move];
+        auto move_score = current_node.move_score[move];
 
         if (move_score.count == 0) {
             return {};
@@ -203,10 +199,9 @@ namespace gcad {
         span<const unsigned> constraints, unsigned move,
         float weight
     ) {
-        vector<float> node;
-        importance_node.get(node, hash(constraints));
-        node.resize(max<unsigned>(move + 1, node.size()));
-        node[move] += weight;
-        importance_node.put(hash(constraints), node);
+        current_bias = importance_node.get(hash(constraints));
+        current_bias.resize(max<unsigned>(move + 1, current_bias.size()));
+        current_bias[move] += weight;
+        importance_node.put(hash(constraints), current_bias);
     }
 }
