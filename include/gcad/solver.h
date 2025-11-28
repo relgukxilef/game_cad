@@ -14,14 +14,15 @@ namespace gcad {
         unsigned move;
     };
 
-    template<class K, class V, class H>
+    template<class K, class V, class H = std::hash<K>>
     struct cache_t : private H {
-        cache_t(unsigned log_size = 12);
-        template<class T> void get(V&, const T&) const;
+        cache_t(unsigned log_size);
+        template<class T> const V& get(const T& t) const;
         template<class T> void put(const T&, const V&);
         std::vector<K> keys;
         std::vector<V> values;
         std::size_t log_size;
+        V default_value{};
     };
 
     struct hash {
@@ -41,24 +42,24 @@ namespace gcad {
         solver_t(unsigned log_size = 12);
         // TODO: take span as argument instead of vector
         solution_t choose(
-            const std::vector<unsigned> &information, unsigned maximum,
+            std::span<const unsigned> information, unsigned maximum,
             uint64_t mask = ~0
         );
         solution_t choose(
-            const std::vector<unsigned> &information, 
-            const std::vector<unsigned> &constraints, unsigned maximum,
+            std::span<const unsigned> information, 
+            std::span<const unsigned> constraints, unsigned maximum,
             uint64_t mask = ~0
         );
         void score(
-            const std::vector<unsigned> &information, unsigned move, 
+            std::span<const unsigned> information, unsigned move, 
             float value, float weight = 1.0f, bool leaf = false
         );
         statistics get_statistics(
-            const std::vector<unsigned> &information, unsigned move
+            std::span<const unsigned> information, unsigned move
         );
 
         void bias(
-            const std::vector<unsigned> &constraints, unsigned move, 
+            std::span<const unsigned> constraints, unsigned move, 
             float weight
         );
 
@@ -71,11 +72,11 @@ namespace gcad {
             std::vector<score_t> move_score;
         };
 
-        cache_t<std::vector<unsigned>, node, hash> information_node;
-        // Given a player index and that players observations and moves, 
-        // bias-corrected
-        cache_t<std::vector<unsigned>, std::vector<float>, hash> 
-            importance_node;
+        cache_t<std::uint64_t, node> information_node;
+        cache_t<std::uint64_t, std::vector<float>> importance_node;
         std::minstd_rand random;
+
+        node current_node;
+        std::vector<float> current_bias;
     };
 }

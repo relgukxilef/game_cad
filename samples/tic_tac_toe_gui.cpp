@@ -92,10 +92,10 @@ int main() {
 
     tic_tac_toe game;
 
-    gcad::solver_t solver;
+    gcad::solver_t solver(20);
     gcad::replay_t players(2, &solver);
 
-    for (auto i = 0; i < 1000; i++) {
+    for (auto i = 0; i < 10'000'000; i++) {
         gcad::replay_t fork(2, &solver);
         tic_tac_toe simulation;
         while (!simulation.result) {
@@ -132,14 +132,6 @@ int main() {
                 if (ImGui::Button(symbol, {100, 100})) {
                     players[0].input(index);
                     game.update(players);
-
-                    for (auto i = 0; i < 1000; i++) {
-                        auto fork = players[1].sample(&solver);
-                        tic_tac_toe simulation;
-                        while (!simulation.result) {
-                            simulation.update(fork);
-                        }
-                    }
 
                     while (!game.result && game.current_player() != 0) {
                         game.update(players);

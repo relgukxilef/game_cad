@@ -56,6 +56,7 @@ namespace gcad {
         std::vector<player_t> players;
         std::vector<unsigned> assumed_moves;
         std::vector<float> assumed_moves_weights;
+        std::vector<unsigned> current_bias;
 
         solver_t *solver;
     };
