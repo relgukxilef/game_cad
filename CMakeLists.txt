@@ -8,19 +8,28 @@ add_subdirectory(source)
 target_include_directories(GameCAD PUBLIC include)
 
 include(FetchContent)
+
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG 3.4
 )
-FetchContent_MakeAvailable(glfw)
 
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG v1.91.9
 )
-FetchContent_MakeAvailable(imgui)
+
+FetchContent_Declare(
+    doxygen
+    URL https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.windows.x64.bin.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP true
+)
+
+FetchContent_MakeAvailable(imgui glfw doxygen)
+
+FetchContent_GetProperties(doxygen SOURCE_DIR doxygen_dir)
 
 add_library(
     imgui STATIC 
@@ -41,3 +50,8 @@ target_include_directories(
 target_link_libraries(imgui PUBLIC glfw)
 
 add_subdirectory(samples)
+
+add_custom_target(
+    documentation ALL
+    ${doxygen_dir}/doxygen ${CMAKE_CURRENT_SOURCE_DIR}/documentation/Doxyfile
+)
