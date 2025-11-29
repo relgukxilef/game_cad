@@ -23,8 +23,11 @@ FetchContent_Declare(
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(DOXYGEN_FILE windows.x64.bin.zip)
+    set(DOXYGEN_PATH doxygen)
 else()
     set(DOXYGEN_FILE linux.bin.tar.gz)
+    # For some reason the path inside the archive is different between platforms
+    set(DOXYGEN_PATH doxygen-1.15.0/bin/doxygen)
 endif()
 
 FetchContent_Declare(
@@ -60,5 +63,6 @@ add_subdirectory(samples)
 
 add_custom_target(
     documentation ALL
-    ${doxygen_dir}/doxygen ${CMAKE_CURRENT_SOURCE_DIR}/documentation/Doxyfile
+    ${doxygen_dir}/${DOXYGEN_PATH} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/documentation/Doxyfile
 )
