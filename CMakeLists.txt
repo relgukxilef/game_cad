@@ -21,8 +21,7 @@ FetchContent_Declare(
     GIT_TAG v1.91.9
 )
 
-#if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-if(FALSE)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(DOXYGEN_FILE windows.x64.bin.zip)
     set(DOXYGEN_PATH doxygen)
 else()
