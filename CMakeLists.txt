@@ -21,13 +21,14 @@ FetchContent_Declare(
     GIT_TAG v1.91.9
 )
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+#if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(FALSE)
     set(DOXYGEN_FILE windows.x64.bin.zip)
     set(DOXYGEN_PATH doxygen)
 else()
     set(DOXYGEN_FILE linux.bin.tar.gz)
     # For some reason the path inside the archive is different between platforms
-    set(DOXYGEN_PATH doxygen-1.15.0/bin/doxygen)
+    set(DOXYGEN_PATH bin/doxygen)
 endif()
 
 FetchContent_Declare(
