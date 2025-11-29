@@ -21,9 +21,16 @@ FetchContent_Declare(
     GIT_TAG v1.91.9
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(DOXYGEN_PLATFORM windows.x64)
+else()
+    set(DOXYGEN_PLATFORM linux)
+endif()
+
 FetchContent_Declare(
     doxygen
-    URL https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.windows.x64.bin.zip
+    URL 
+    "https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.${DOXYGEN_PLATFORM}.bin.zip"
     DOWNLOAD_EXTRACT_TIMESTAMP true
 )
 
