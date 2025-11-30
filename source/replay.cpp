@@ -4,7 +4,18 @@
 
 using namespace std;
 
-namespace gcad {
+namespace gcad {    
+    struct player_t {
+        // stores a replay and the position in the replay
+        // moves selected by the solver are added at the end of the replay
+        // this serves as a constraint on the sampled games
+        vector<unsigned> observations;
+        vector<move_t> moves;
+        unsigned current_move = 0;
+        unsigned current_observation = 0;
+        unsigned replay_end = 0; // TODO: remove
+    };
+
     vector<unsigned> encode_bias(
         vector<unsigned> &observations, 
         vector<unsigned> &assumptions,
@@ -170,6 +181,10 @@ namespace gcad {
         this->solver = solver;
         players.resize(number_players);
     }
+
+    replay_t::~replay_t() = default;
+    replay_t::replay_t(replay_t &) = default;
+    replay_t &replay_t::operator=(const replay_t &) = default;
     
     void player_ptr::resize(unsigned size) {
         auto &player = players->players[index];

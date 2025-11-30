@@ -9,16 +9,7 @@ namespace gcad {
         float weight; // 0 for moves that should be ignored during backprop
     };
 
-    struct player_t {
-        // stores a replay and the position in the replay
-        // moves selected by the solver are added at the end of the replay
-        // this serves as a constraint on the sampled games
-        std::vector<unsigned> observations;
-        std::vector<move_t> moves;
-        unsigned current_move = 0;
-        unsigned current_observation = 0;
-        unsigned replay_end = 0; // TODO: remove
-    };
+    struct player_t;
 
     struct replay_t;
 
@@ -94,6 +85,10 @@ namespace gcad {
         //! \brief Construct a new replay for the given number of players and 
         //! given solver.
         replay_t(unsigned number_players = 1, solver_t *solver = nullptr);
+
+        replay_t(replay_t &);
+        ~replay_t();
+        replay_t &operator=(const replay_t &);
 
         //! Access the information of the player with the given index.
         player_ptr operator[](unsigned index);
