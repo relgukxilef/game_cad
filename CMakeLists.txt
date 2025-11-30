@@ -8,19 +8,38 @@ add_subdirectory(source)
 target_include_directories(GameCAD PUBLIC include)
 
 include(FetchContent)
+
 FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG 3.4
 )
-FetchContent_MakeAvailable(glfw)
 
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG v1.91.9
 )
-FetchContent_MakeAvailable(imgui)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(DOXYGEN_FILE windows.x64.bin.zip)
+    set(DOXYGEN_PATH doxygen)
+else()
+    set(DOXYGEN_FILE linux.bin.tar.gz)
+    # For some reason the path inside the archive is different between platforms
+    set(DOXYGEN_PATH bin/doxygen)
+endif()
+
+FetchContent_Declare(
+    doxygen
+    URL
+    "https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.${DOXYGEN_FILE}"
+    DOWNLOAD_EXTRACT_TIMESTAMP true
+)
+
+FetchContent_MakeAvailable(imgui glfw doxygen)
+
+FetchContent_GetProperties(doxygen SOURCE_DIR doxygen_dir)
 
 add_library(
     imgui STATIC 
@@ -41,3 +60,9 @@ target_include_directories(
 target_link_libraries(imgui PUBLIC glfw)
 
 add_subdirectory(samples)
+
+add_custom_target(
+    documentation ALL
+    ${doxygen_dir}/${DOXYGEN_PATH} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/documentation/Doxyfile
+)

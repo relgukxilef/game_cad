@@ -8,5 +8,6 @@
 !*.h
 !CMakeLists.txt
 !*.md
+!*.yml
 
 build

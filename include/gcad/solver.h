@@ -1,12 +1,13 @@
 #include <vector>
 #include <span>
-#include <unordered_map>
 #include <random>
 
 namespace gcad {
+    //! \brief Mean and deviation of an estimated value.
     struct statistics {
         // TODO: maybe use Welford method for more accurate streaming variance
-        float mean = 0, deviation = 0;
+        float mean = 0;
+        float deviation = 0;
     };
 
     struct solution_t {
