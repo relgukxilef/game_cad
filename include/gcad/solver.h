@@ -50,6 +50,9 @@ namespace gcad {
             const std::vector<unsigned> &constraints, unsigned maximum,
             uint64_t mask = ~0
         );
+        solution_t random(
+            const std::vector<unsigned> &constraints, unsigned maximum
+        );
         void score(
             const std::vector<unsigned> &information, unsigned move, 
             float value, float weight = 1.0f, bool leaf = false
@@ -77,6 +80,6 @@ namespace gcad {
         // bias-corrected
         cache_t<std::vector<unsigned>, std::vector<float>, hash> 
             importance_node;
-        std::minstd_rand random;
+        std::minstd_rand generator;
     };
 }

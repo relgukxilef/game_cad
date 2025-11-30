@@ -1,10 +1,13 @@
 #include <gcad/replay.h>
 
-#include <limits>
-
 using namespace std;
 
-namespace gcad {    
+namespace gcad {
+    struct move_t {
+        unsigned move, observations;
+        float weight; // 0 for moves that should be ignored during backprop
+    };
+
     struct player_t {
         // stores a replay and the position in the replay
         // moves selected by the solver are added at the end of the replay
@@ -22,7 +25,7 @@ namespace gcad {
         size_t prefix_length
     ) {
         vector<unsigned> result;
-        result.push_back(observations.size());
+        result.push_back(unsigned(observations.size()));
         result.insert(result.end(), observations.begin(), observations.end());
         result.insert(
             result.end(), assumptions.begin(), 
@@ -194,8 +197,8 @@ namespace gcad {
         else
             player.observations.resize(player.moves.back().observations);
         // TODO: better way to do this?
-        player.current_move = player.moves.size();
-        player.current_observation = player.observations.size();
+        player.current_move = unsigned(player.moves.size());
+        player.current_observation = unsigned(player.observations.size());
     }
 
     void player_ptr::input(unsigned move) {
@@ -237,12 +240,21 @@ namespace gcad {
     }
 
     unsigned replay_t::size() {
-        return players.size();
+        return unsigned(players.size());
     }
 
     void replay_t::see_all(unsigned move) {
         for (auto i = 0u; i < size(); i++) {
             (*this)[i].see(move);
         }
+    }
+
+    unsigned replay_t::random(unsigned maximum) {
+        if (random_events.size() < current_random_event)
+            return random_events[current_random_event++];
+        auto solution = solver->random(assumed_moves, maximum);
+        assumed_moves.push_back(solution.move);
+        assumed_moves_weights.push_back(1.f / solution.bias);
+        return solution.move;
     }
 }

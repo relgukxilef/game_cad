@@ -76,7 +76,7 @@ namespace gcad {
         score.resize(maximum);
 
         distribution parent;
-        unsigned offset = random() % maximum;
+        unsigned offset = generator() % maximum;
         for (auto i = 0u; i < maximum; i++) {
             auto move = (offset + i) % maximum;
             if (~mask & (1ull << move))
@@ -140,7 +140,34 @@ namespace gcad {
             weight = max(weight, 1e-9f);
             sum += weight;
 
-            if (bernoulli_distribution(weight / sum)(random)) {
+            if (bernoulli_distribution(weight / sum)(generator)) {
+                best_move = {weight, plausibility, move};
+            }
+        }
+
+        best_move.plausibility /= importance_sum;
+        best_move.bias /= sum;
+
+        return best_move;
+    }
+
+    solution_t solver_t::random(
+        const std::vector<unsigned> &constraints, unsigned maximum
+    ) {
+        vector<float> bias;
+        importance_node.get(bias, constraints);
+        bias.resize(maximum);
+        float sum = 0, importance_sum = 0;
+        solution_t best_move = {1.f, 1.f, 0};
+
+        for (auto move = 0u; move < maximum; move++) {
+            float plausibility = bias[move] + 1;
+            importance_sum += plausibility;
+            float weight = plausibility;
+            weight = max(weight, 1e-9f);
+            sum += weight;
+
+            if (bernoulli_distribution(weight / sum)(generator)) {
                 best_move = {weight, plausibility, move};
             }
         }

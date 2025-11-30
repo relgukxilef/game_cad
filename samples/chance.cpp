@@ -24,7 +24,7 @@ void chance::update(gcad::replay_t &players) {
     // this requires differentiating between noise from reward and noise from TS
     auto probability = array<unsigned, 4>{10, 11, 8, 12}[row * 2 + column];
 
-    unsigned secret = rand() % 20;
+    unsigned secret = players.random(20);
 
     float score = (secret < probability) ? 2.f : 1.f;
 
@@ -46,7 +46,7 @@ int main() {
         }
 
         for (auto i : histogram) {
-            printf("%lu ", i / (iteration + 1));
+            printf("%u ", i / (iteration + 1));
         }
         printf("\n");
     }

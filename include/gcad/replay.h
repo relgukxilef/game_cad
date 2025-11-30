@@ -4,11 +4,6 @@
 #include "solver.h"
 
 namespace gcad {
-    struct move_t {
-        unsigned move, observations;
-        float weight; // 0 for moves that should be ignored during backprop
-    };
-
     struct player_t;
 
     struct replay_t;
@@ -100,6 +95,10 @@ namespace gcad {
         //! Let all players make the same observation.
         void see_all(unsigned value);
 
+        //! \brief Read the next random event from the replay.
+        //! \param maximum The exclusive maximum value.
+        unsigned random(unsigned maximum);
+
         // TODO: maybe move to separate struct
         unsigned current_player = 0;
         unsigned current_choice = 0;
@@ -109,6 +108,8 @@ namespace gcad {
         std::vector<player_t> players;
         std::vector<unsigned> assumed_moves;
         std::vector<float> assumed_moves_weights;
+        std::vector<unsigned> random_events;
+        unsigned current_random_event;
 
         solver_t *solver;
     };
