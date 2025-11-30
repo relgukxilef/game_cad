@@ -1,5 +1,9 @@
 # GameCAD
 
+[Documentation](https://relgukxilef.github.io/game_cad/annotated.html)
+
+![GitHub branch check runs](https://img.shields.io/github/check-runs/relgukxilef/game_cad/main) ![GitHub last commit](https://img.shields.io/github/last-commit/relgukxilef/game_cad)
+
 This library implements Monte Carlo Tree Search for general game playing. It is designed to be easy to drop into existing games to control NPCs or to automatically find optimal player strategies. It is vaguely inspired by fuzzing libraries. Players try pseudo-random actions, guided by the score they receive from the game. It works for both turn-based and real-time games, games with one or multiple players, both perfect information and hidden information games, zero-sum and non-zero-sum games, symmetric and asymmetric games. 
 
 The main entry point is the `replay_t` class. It allows recording and replaying the inputs and outputs of the game. By passing all moves and observations through it, the library can build a model of the game. 
