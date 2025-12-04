@@ -133,6 +133,8 @@ namespace gcad {
     void player_ptr::score(float value) {
         if (!players->solver)
             return;
+        if (players->contradiction)
+            return;
         auto &player = players->players[index];
         // score leaf
         vector<unsigned> observations{
@@ -269,5 +271,9 @@ namespace gcad {
         assumed_moves.push_back(value);
         assumed_moves_weights.push_back(weight);
         return value;
+    }
+
+    bool replay_t::rejected() {
+        return contradiction;
     }
 }

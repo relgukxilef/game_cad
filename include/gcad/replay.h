@@ -95,9 +95,22 @@ namespace gcad {
         //! Let all players make the same observation.
         void see_all(unsigned value);
 
-        //! \brief Read the next random event from the replay.
+        //! \brief Read the next random event from the replay or sample it.
+        //! \details If the replay is constrained, it will attempt to only 
+        //! return values that don't contradict the constraints.
         //! \param maximum The exclusive maximum value.
         unsigned random(unsigned maximum);
+
+        //! \brief Whether the current state contradicts the constraints of the
+        //! replay.
+        //! \details Due to imperfect knowledge of the game tree, 
+        //! \ref player_ptr::choose and \ref random can return values that 
+        //! violate a 
+        //! constraint of the replay. If a contradiction is detected, this
+        //! function will return true. This can be used to perform rejection 
+        //! sampling. How likely this is depends on the complexity of the game
+        //! and how many playthroughs have already been played.
+        bool rejected();
 
         // TODO: maybe move to separate struct
         unsigned current_player = 0;
