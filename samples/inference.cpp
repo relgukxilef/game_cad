@@ -14,12 +14,11 @@ B  1  0
 */
 
 void inference(replay_t &players, unsigned histogram[]) {
-    bool a = players[0].choose(2).value();
-    bool b = players[0].choose(2).value();
-    players[1].see(a && b);
-    bool a_hat = players[1].choose(2).value();
-    players[1].score(a == a_hat);
-    players[0].score(0);
+    bool a = players.random(2);
+    bool b = players.random(2);
+    players[0].see(a && b);
+    bool a_hat = players[0].choose(2).value();
+    players[0].score(a == a_hat);
     histogram[a * 2 + b]++;
 }
 
@@ -40,9 +39,9 @@ int main() {
     }
 
     replay_t players(2, &solver);
-    players[1].see(0);
+    players[0].see(0);
     for (auto iteration = 0u; iteration < 240; iteration++) {
-        replay_t replay = players[1].sample(&solver);
+        replay_t replay = players[0].sample(&solver);
         inference(replay, histogram);
     }
 

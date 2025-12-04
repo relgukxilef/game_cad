@@ -8,7 +8,7 @@ namespace gcad {
 
     struct replay_t;
 
-    //! A player in a replay. Returned by \ref replay_t::operator[].
+    //! A player in a replay, returned by \ref replay_t::operator[].
     struct player_ptr {
 
         //! \brief Let the player make a choice between a number of options.
@@ -109,7 +109,7 @@ namespace gcad {
         std::vector<unsigned> assumed_moves;
         std::vector<float> assumed_moves_weights;
         std::vector<unsigned> random_events;
-        unsigned current_random_event;
+        unsigned current_random_event = 0;
 
         solver_t *solver;
     };

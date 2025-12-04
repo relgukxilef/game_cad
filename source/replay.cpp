@@ -237,6 +237,7 @@ namespace gcad {
         }
         assumed_moves.clear();
         assumed_moves_weights.clear();
+        current_random_event = 0;
     }
 
     unsigned replay_t::size() {
@@ -250,11 +251,23 @@ namespace gcad {
     }
 
     unsigned replay_t::random(unsigned maximum) {
-        if (random_events.size() < current_random_event)
-            return random_events[current_random_event++];
-        auto solution = solver->random(assumed_moves, maximum);
-        assumed_moves.push_back(solution.move);
-        assumed_moves_weights.push_back(1.f / solution.bias);
-        return solution.move;
+        unsigned value;
+        float weight;
+        if (current_random_event < random_events.size()) {
+            value = random_events[current_random_event++];
+            weight = 0;
+        } else {
+            auto solution = solver->random(
+                encode_bias(
+                    players[constrained_player].observations,
+                    assumed_moves
+                ), maximum
+            );
+            value = solution.move;
+            weight = 1.f / solution.bias;
+        }
+        assumed_moves.push_back(value);
+        assumed_moves_weights.push_back(weight);
+        return value;
     }
 }
