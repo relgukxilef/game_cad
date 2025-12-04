@@ -47,11 +47,11 @@ namespace gcad {
         void score(float value);
 
         //! \brief Create a new replay, constrained to the set of games that, to
-        //! this player, are indistinguishable from the current one.
+        //! this player, are indistinguishable from this one.
         //! \details This can be used to sample the believe-space. 
         //! E.g. to estimate the likelihood of an opponent holding a specific
-        //! card, one can take a number of samples, e.g. 100, and count how
-        //! often the opponent did have the card.
+        //! card in a card game, one can take a number of samples, e.g. 100, 
+        //! and count how often the opponent did have the card.
         // TODO: rename sample to fork
         replay_t sample(solver_t *solver);
         
@@ -61,7 +61,7 @@ namespace gcad {
         //! \details This can be used to insert human moves or to restrict the
         //! sampling to a specific subtree.
         //! \bug Right now it is only valid to add a move when it's that players
-        //! turn. This should be changed.
+        //! turn. See https://github.com/relgukxilef/game_cad/issues/20.
         void input(unsigned value);
 
         //! \brief Estimated the expected score for performing the given move at
@@ -73,7 +73,7 @@ namespace gcad {
     };
 
     //! \brief Stores a full or partial list of moves and observations of a 
-    //! game.
+    //! playthrough.
     //! \details It allows replaying games and sampling the game tree or 
     //! subtrees of it.
     struct replay_t {
@@ -105,10 +105,10 @@ namespace gcad {
         //! replay.
         //! \details Due to imperfect knowledge of the game tree, 
         //! \ref player_ptr::choose and \ref random can return values that 
-        //! violate a 
-        //! constraint of the replay. If a contradiction is detected, this
-        //! function will return true. This can be used to perform rejection 
-        //! sampling. How likely this is depends on the complexity of the game
+        //! violate a constraint of the replay. 
+        //! If a contradiction is detected, this function will return true. 
+        //! This can be used to perform rejection sampling. 
+        //! How likely this is depends on the complexity of the game
         //! and how many playthroughs have already been played.
         bool rejected();
 
