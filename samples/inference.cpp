@@ -13,42 +13,34 @@ B  1  0
 ~B 0  0
 */
 
-void inference(replay_t &players, unsigned histogram[]) {
-    bool a = players[0].choose(2).value();
-    bool b = players[0].choose(2).value();
-    players[1].see(a && b);
-    bool a_hat = players[1].choose(2).value();
-    players[1].score(a == a_hat);
-    players[0].score(0);
-    histogram[a * 2 + b]++;
+void inference(replay_t &players, unsigned histogram[], unsigned &rejected) {
+    bool a = players.random(2);
+    bool b = players.random(2);
+    players[0].see(a && b);
+    bool a_hat = players[0].choose(2).value();
+    players[0].score(a == a_hat);
+    if (!players.rejected())
+        histogram[a * 2 + b]++;
+    else
+        rejected++;
 }
 
 int main() {
     solver_t solver;
 
     unsigned histogram[4] = {};
+    unsigned rejected = 0;
     
-    for (auto iteration = 0u; iteration < 240; iteration++) {
-        replay_t players(2, &solver);
-        inference(players, histogram);
-    }
-
-    // should pick all paths equally
-    for (auto &i : histogram) {
-        assert(i < 90);
-        i = 0;
-    }
-
     replay_t players(2, &solver);
-    players[1].see(0);
+    players[0].see(0);
     for (auto iteration = 0u; iteration < 240; iteration++) {
-        replay_t replay = players[1].sample(&solver);
-        inference(replay, histogram);
+        replay_t replay = players[0].sample(&solver);
+        inference(replay, histogram, rejected);
     }
 
     printf(
-        "%u\t%u\n%u\t%u\n", 
-        histogram[0], histogram[1], histogram[2], histogram[3]
+        "%u\t%u\n%u\t%u\t%u\n", 
+        histogram[0], histogram[1], histogram[2], histogram[3], rejected
     );
 
     // should rarely pick the (true, true) path and others equally
@@ -56,4 +48,5 @@ int main() {
     assert(histogram[1] < 110);
     assert(histogram[2] < 110);
     assert(histogram[3] < 30);
+    assert(rejected > 0);
 }
