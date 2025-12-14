@@ -28,6 +28,7 @@ namespace gcad {
         //! \return The estimated optimal move under constraints, or 
         //! \c std::nullopt if there is no move for this player in the replay
         //! and no solver was specified.
+        //! \snippet snippets/functions.cpp choose
         // TODO: maybe choose should return unsigned
         std::optional<unsigned> choose(unsigned maximum, uint64_t mask = ~0);
 
@@ -78,7 +79,7 @@ namespace gcad {
     //! subtrees of it.
     struct replay_t {
         //! \brief Construct a new replay for the given number of players and 
-        //! given solver.
+        //! given solver. \snippet snippets/functions.cpp construct
         replay_t(unsigned number_players = 1, solver_t *solver = nullptr);
 
         replay_t(replay_t &);
@@ -98,6 +99,7 @@ namespace gcad {
         //! \brief Read the next random event from the replay or sample it.
         //! \details If the replay is constrained, it will attempt to only 
         //! return values that don't contradict the constraints.
+        //! \snippet snippets/functions.cpp random
         //! \param maximum The exclusive maximum value.
         unsigned random(unsigned maximum);
 
