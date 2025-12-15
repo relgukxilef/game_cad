@@ -29,7 +29,6 @@ namespace gcad {
         //! \return The estimated optimal move under constraints, or 
         //! \c std::nullopt if there is no move for this player in the replay
         //! and no solver was specified.
-        //! \snippet snippets/functions.cpp choose
         // TODO: maybe choose should return unsigned
         std::optional<unsigned> choose(unsigned maximum, uint64_t mask = ~0);
 
