@@ -3,6 +3,10 @@
 
 using namespace std;
 
+void play(gcad::replay_t& replay) {
+
+}
+
 int main() {
 //! [construct]
 gcad::solver_t solver;
@@ -24,5 +28,29 @@ cards &= ~(1 << trick);
 assert(door < 2);
 assert((1 << trick) & 0b11101);
 
+//! [see]
+unsigned int card = 2;
+replay[0].see(card);
+//! [see]
 
+//! [score]
+bool victory = true;
+if (victory) {
+    replay[0].score(1);
+} else {
+    replay[0].score(0);
+}
+//! [score]
+
+//! [sample]
+gcad::replay_t hypothesis;
+for (int i = 0; i < 100; i++) {
+    hypothesis = replay[0].sample(&solver);
+    play(hypothesis);
+}
+//! [sample]
+
+//! [input]
+replay[0].input(2);
+//! [input]
 }
