@@ -14,7 +14,7 @@ void monty_hall(replay_t &replay) {
     int price = rand() % 3;
 
     // player 0 chooses one of the 3 doors
-    int choice = replay[0].choose(3).get();
+    int choice = replay[0].choose(3).value();
 
     // the host reveals one of the doors that doesn't have the price
     int reveal = rand() % 3;
@@ -24,7 +24,7 @@ void monty_hall(replay_t &replay) {
     replay[0].see(reveal);
 
     // player 0 may change their choice of door
-    choice = replay[0].choose(3).get();
+    choice = replay[0].choose(3).value();
 
     // if the choice was correct, give player 0 a point
     if (choice == price)
