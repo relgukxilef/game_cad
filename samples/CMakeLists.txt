@@ -38,9 +38,15 @@ add_test(NAME grid_search COMMAND grid_search)
 
 add_executable(inference inference.cpp)
 target_link_libraries(inference PRIVATE GameCAD)
-
 add_test(NAME inference COMMAND inference)
 
+add_executable(functions functions.cpp)
+target_link_libraries(functions PRIVATE GameCAD)
+add_test(NAME functions COMMAND functions)
+
+add_executable(introduction introduction.cpp)
+target_link_libraries(introduction PRIVATE GameCAD)
+add_test(NAME introduction COMMAND introduction)
 
 add_executable(
     guess
