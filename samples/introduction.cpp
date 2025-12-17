@@ -19,42 +19,51 @@ Currently I'm trying to get the library into a state where it has a mostly stabl
 */
 
 //! [monty_hall]
+#include <cassert>
 #include <gcad/replay.h>
 
-using namespace gcad;
+void monty_hall(gcad::replay_t& replay) {
+    gcad::player_ptr player = replay[0];
 
-void monty_hall(replay_t &replay) {
     // price is behind one of three doors
-    int price = rand() % 3;
+    int price = replay.random(3);
 
-    // player 0 chooses one of the 3 doors
-    int choice = replay[0].choose(3).value();
+    // player chooses one of the 3 doors
+    int choice = player.choose(3).value();
 
     // the host reveals one of the doors that doesn't have the price
-    int reveal = rand() % 3;
-    for (int i = 0; i < 3; i++)
-        if (reveal == price || reveal == choice)
-            reveal = (reveal + 1) % 3;
-    replay[0].see(reveal);
-
-    // player 0 may change their choice of door
-    choice = replay[0].choose(3).value();
-
-    // if the choice was correct, give player 0 a point
-    if (choice == price)
-        replay[0].score(1);
+    int reveal;
+    if (price != choice)
+        reveal = 3 - price - choice;
     else
-        replay[0].score(0);
+        reveal = (price + 1 + replay.random(2)) % 3;
+    assert(reveal != price);
+    assert(reveal != choice);
+
+    // the player sees which door gets revealed
+    player.see(reveal);
+
+    // player may change their choice of door
+    bool change = player.choose(2).value();
+    if (change)
+        choice = 3 - choice - reveal;
+    assert(choice != reveal);
+
+    // if the choice was correct, give the player a point
+    if (choice == price)
+        player.score(1);
+    else
+        player.score(0);
 }
 
 int main() {
     // solver stores model of the game
-    solver_t solver;
+    gcad::solver_t solver;
 
     // play some games
     for (auto i = 0; i < 1000; i++) {
         // create an empty replay with 1 player
-        replay_t replay(1, &solver);
+        gcad::replay_t replay(1, &solver);
         monty_hall(replay);
     }
 }
