@@ -89,7 +89,10 @@ namespace gcad {
                 return {1.f / maximum, 1.f / maximum, move};
             }
 
-            parent.push_back(move_score.sum / move_score.count);
+            parent.insert(
+                {move_score.sum, move_score.squares, move_score.count}, 
+                1 / move_score.count
+            );
         }
 
         float max_mean = 0;
