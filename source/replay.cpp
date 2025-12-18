@@ -208,6 +208,8 @@ namespace gcad {
         player.moves.push_back({move, player.current_observation, 0});
     }
 
+    //! \brief Calculate the mean and standard deviation of the score expected
+    //! when making the given choice at the current position in the replay.
     statistics player_ptr::get_expected_score(unsigned choice) {
         auto &player = players->players[index];
 
