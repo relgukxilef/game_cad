@@ -1,6 +1,6 @@
 # GameCAD
 
-[Documentation](https://relgukxilef.github.io/game_cad/annotated.html)
+[Documentation](https://relgukxilef.github.io/game_cad)
 
 ![GitHub branch check runs](https://img.shields.io/github/check-runs/relgukxilef/game_cad/main) ![GitHub last commit](https://img.shields.io/github/last-commit/relgukxilef/game_cad)
 
