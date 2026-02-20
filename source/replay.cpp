@@ -4,7 +4,7 @@ using namespace std;
 
 namespace gcad {
     struct move_t {
-        unsigned move, observations;
+        unsigned move;
         float weight; // 0 for moves that should be ignored during backprop
     };
 
@@ -14,7 +14,7 @@ namespace gcad {
         // this serves as a constraint on the sampled games
         vector<unsigned> observations;
         vector<move_t> moves;
-        unsigned current_move = 0;
+        vector<unsigned> moves_observations;
         unsigned current_observation = 0;
         unsigned replay_end = 0; // TODO: remove
     };
@@ -47,8 +47,8 @@ namespace gcad {
         optional<unsigned> move;
         float bias_weight = 0;
 
-        if (player.current_move < player.moves.size()) {
-            move = player.moves[player.current_move].move;
+        if (player.moves_observations.size() < player.moves.size()) {
+            move = player.moves[player.moves_observations.size()].move;
             // Replay can't contain packed moves as the mask is not known at the
             // call to input
 
@@ -84,13 +84,13 @@ namespace gcad {
             bias_weight = 1.f / solution.bias;
 
             // TODO: let player see choice?
-            player.moves.push_back({*move, player.current_observation, weight});
+            player.moves.push_back({*move, weight});
         }
 
         if (move) {
             players->assumed_moves.push_back(*move);
             players->assumed_moves_weights.push_back(bias_weight);
-            player.current_move++;
+            player.moves_observations.push_back(player.current_observation);
         }
 
         players->current_player = index;
@@ -139,7 +139,7 @@ namespace gcad {
         // score leaf
         vector<unsigned> observations{
             player.observations.begin(), 
-            player.observations.begin() + player.moves.back().observations
+            player.observations.begin() + player.moves_observations.back()
         };
         players->solver->score(
             observations, player.moves.back().move, 
@@ -153,7 +153,7 @@ namespace gcad {
             // TODO: avoid copy
             observations = {
                 player.observations.begin(), 
-                player.observations.begin() + move.observations
+                player.observations.begin() + player.moves_observations[i]
             };
             players->solver->score(
                 observations, move.move, value, move.weight
@@ -173,7 +173,7 @@ namespace gcad {
             auto &player = copy.players[i];
             if (i != index)
                 copy[i].resize(0);
-            player.current_move = 0;
+            player.moves_observations.clear();
             player.current_observation = 0;
             player.replay_end = (unsigned)copy.players[i].moves.size();
         }
@@ -194,18 +194,17 @@ namespace gcad {
     void player_ptr::resize(unsigned size) {
         auto &player = players->players[index];
         player.moves.resize(size);
+        player.moves_observations.resize(size);
         if (size == 0)
             player.observations.clear();
         else
-            player.observations.resize(player.moves.back().observations);
-        // TODO: better way to do this?
-        player.current_move = unsigned(player.moves.size());
+            player.observations.resize(player.moves_observations.back());
         player.current_observation = unsigned(player.observations.size());
     }
 
     void player_ptr::input(unsigned move) {
         auto &player = players->players[index];
-        player.moves.push_back({move, player.current_observation, 0});
+        player.moves.push_back({move, 0});
     }
 
     //! \brief Calculate the mean and standard deviation of the score expected
@@ -236,7 +235,7 @@ namespace gcad {
         for (auto i = 0; i < players.size(); i++) {
             auto &player = players[i];
             operator[](i).resize(player.replay_end);
-            player.current_move = 0;
+            player.moves_observations.clear();
             player.current_observation = 0;
         }
         assumed_moves.clear();
