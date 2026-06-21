@@ -69,7 +69,7 @@ namespace gcad {
         //! turn. See https://github.com/relgukxilef/game_cad/issues/20.
         void input(unsigned value);
 
-        //! \brief Estimated the expected score for performing the given move at
+        //! \brief Estimate the expected score for performing the given move at
         //! the current turn.
         statistics get_expected_score(unsigned choice);
 

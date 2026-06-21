@@ -78,3 +78,7 @@ find_package(OpenGL)
 add_executable(tic_tac_toe_gui tic_tac_toe_gui.cpp)
 target_link_libraries(tic_tac_toe_gui PRIVATE GameCAD glfw imgui OpenGL::GL)
 target_compile_features(tic_tac_toe_gui PUBLIC cxx_std_20)
+
+add_executable(kuhn_poker kuhn_poker.cpp)
+target_link_libraries(kuhn_poker PRIVATE GameCAD)
+add_test(NAME kuhn_poker COMMAND kuhn_poker)
