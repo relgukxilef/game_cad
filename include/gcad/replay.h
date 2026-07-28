@@ -8,6 +8,12 @@ namespace gcad {
 
     struct replay_t;
 
+    struct event_t {
+        unsigned size = 0, index = 0;
+        unsigned player = ~0u; // ~0 for none
+        unsigned observation = 0;
+    };
+
     //! A player in a replay, returned by \ref replay_t::operator[].
     struct player_ptr {
 
@@ -81,6 +87,20 @@ namespace gcad {
     //! playthrough.
     //! \details It allows replaying games and sampling the game tree or 
     //! subtrees of it.
+    //! It stores an event index and an event list. Each action it reads an 
+    //! event from the event list. An event is a player move or a random 
+    //! outcome. If there are no more events in the event list, it creates new
+    //! events and adds them to the list.
+    //! At the end of the game, the event list is a full replay. To play the
+    //! game to a specific point, use insert_event to add to the event list 
+    //! before playing the game. You can then continue the game from that point 
+    //! on.
+    //! Additionally to the event list, each player has a list of moves and 
+    //! observations. Both can be set by the caller to force moves, for any 
+    //! number of players.
+    //! Normally you will want to either set some players moves or observations, 
+    //! or set the event list. If both are set and they contradict each other 
+    //! the behaviour is undefined.
     struct replay_t {
         //! \brief Construct a new replay for the given number of players and 
         //! given solver. \snippet functions.cpp construct
@@ -118,6 +138,15 @@ namespace gcad {
         //! and how many playthroughs have already been played.
         bool rejected();
 
+        //! \brief
+        void insert_event(unsigned event);
+
+        unsigned event_size();
+
+        event_t get_event(unsigned index);
+
+        statistics get_expected_score(unsigned event, unsigned choice);
+
         // TODO: maybe move to separate struct
         unsigned current_player = 0;
         unsigned current_choice = 0;
@@ -127,8 +156,8 @@ namespace gcad {
         std::vector<player_t> players;
         std::vector<unsigned> assumed_moves;
         std::vector<float> assumed_moves_weights;
-        std::vector<unsigned> random_events;
-        unsigned current_random_event = 0;
+        std::vector<event_t> events;
+        unsigned current_event = 0;
 
         solver_t *solver;
     };

@@ -141,8 +141,10 @@ int main() {
     {
         int histogram[3] = {0};
         gcad::replay_t replay(1, &solver);
-        // let player pick the first door
+        // force player to pick the first door and stick with it
         replay[0].input(0);
+        replay[0].input(0);
+        int wins = 0;
         // sample potential continuations
         for (auto i = 0; i < 100; i++) {
             gcad::replay_t hypothesis = replay[0].sample(&solver);
@@ -150,14 +152,63 @@ int main() {
             monty_hall game;
             game.play(hypothesis);
 
+            if (game.choice == game.price)
+                wins++;
             histogram[game.reveal]++;
         }
 
+        printf("Player won %i times\n", wins);
         printf("Host revealed doors ");
         for (auto door : histogram) {
             printf("%ix, ", door);
         }
         printf("\n");
+    }
+
+    // explore game tree
+    {
+        std::vector<unsigned> path;
+        while (true) {
+            gcad::replay_t replay(1, &solver);
+            for (auto event : path)
+                replay.insert_event(event);
+
+            monty_hall game;
+            game.play(replay);
+
+            if (path.size() < replay.event_size()) {
+                path.push_back(0);
+            } else {
+                while (
+                    !path.empty() && 
+                    ++path.back() == replay.get_event((int)path.size() - 1).size
+                ) {
+                    path.pop_back();
+                }
+            }
+
+            if (path.empty())
+                break;
+
+            for (int i = 0; i + 1 < path.size(); i++) {
+                auto event = replay.get_event(i);
+                if (path[i] + 1 == event.size)
+                    fputs(" ", stdout);
+                else
+                    fputs("\xB3", stdout);
+            }
+            auto event = replay.get_event((int)path.size() - 1);
+            if (path.back() + 1 == event.size)
+                fputs("\xC0", stdout);
+            else
+                fputs("\xC3", stdout);
+            printf(
+                "%i: %.2f\n", path.back() + 1, 
+                replay.get_expected_score(
+                    (int)path.size() - 1, path.back()
+                ).mean
+            );
+        }
     }
 }
 //! [hidden]

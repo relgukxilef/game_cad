@@ -46,11 +46,19 @@ namespace gcad {
 
         optional<unsigned> move;
         float bias_weight = 0;
+        float weight = 0;
 
         if (player.current_move < player.moves.size()) {
             move = player.moves[player.current_move].move;
             // Replay can't contain packed moves as the mask is not known at the
             // call to input
+
+        } else if (players->current_event < players->events.size()) {
+            auto& event = players->events[players->current_event];
+            move = event.index;
+            event.size = maximum;
+            event.player = index;
+            event.observation = player.current_observation;
 
         } else if (players->solver) {
             // TODO: avoid copy
@@ -60,7 +68,6 @@ namespace gcad {
                 player.current_observation
             };
 
-            float weight;
             solution_t solution;
 
             if (players->constrained) {
@@ -84,13 +91,23 @@ namespace gcad {
             bias_weight = 1.f / solution.bias;
 
             // TODO: let player see choice?
-            player.moves.push_back({*move, player.current_observation, weight});
         }
 
         if (move) {
             players->assumed_moves.push_back(*move);
             players->assumed_moves_weights.push_back(bias_weight);
+
+            if (player.current_move >= player.moves.size())
+                player.moves.push_back(
+                    {*move, player.current_observation, weight}
+                );
+            if (players->current_event >= players->events.size())
+                players->events.push_back({
+                    maximum, *move, index, player.current_observation
+                });
+
             player.current_move++;
+            players->current_event++;
         }
 
         players->current_player = index;
@@ -208,9 +225,9 @@ namespace gcad {
         player.moves.push_back({move, player.current_observation, 0});
     }
 
-    //! \brief Calculate the mean and standard deviation of the score expected
-    //! when making the given choice at the current position in the replay.
-    statistics player_ptr::get_expected_score(unsigned choice) {
+    statistics get_expected_score(
+        replay_t *players, unsigned index, unsigned observation, unsigned choice
+    ) {
         auto &player = players->players[index];
 
         if (!players->solver) {
@@ -221,11 +238,17 @@ namespace gcad {
         vector<unsigned> observations{
             player.observations.begin(), 
             player.observations.begin() + 
-            player.current_observation
+            observation
         };
         auto statistics = players->solver->get_statistics(observations, choice);
         statistics.mean -= 1;
         return statistics;
+    }
+
+    statistics player_ptr::get_expected_score(unsigned choice) {
+        return gcad::get_expected_score(
+            players, index, players->players[index].current_observation, choice
+        );
     }
 
     player_ptr replay_t::operator[](unsigned index) {
@@ -241,7 +264,8 @@ namespace gcad {
         }
         assumed_moves.clear();
         assumed_moves_weights.clear();
-        current_random_event = 0;
+        events.clear();
+        current_event = 0;
     }
 
     unsigned replay_t::size() {
@@ -257,8 +281,9 @@ namespace gcad {
     unsigned replay_t::random(unsigned maximum) {
         unsigned value;
         float weight;
-        if (current_random_event < random_events.size()) {
-            value = random_events[current_random_event++];
+        if (current_event < events.size()) {
+            value = events[current_event].index;
+            events[current_event].size = maximum;
             weight = 0;
         } else {
             auto solution = solver->random(
@@ -269,7 +294,9 @@ namespace gcad {
             );
             value = solution.move;
             weight = 1.f / solution.bias;
+            events.push_back({maximum, value});
         }
+        current_event++;
         assumed_moves.push_back(value);
         assumed_moves_weights.push_back(weight);
         return value;
@@ -277,5 +304,27 @@ namespace gcad {
 
     bool replay_t::rejected() {
         return contradiction;
+    }
+
+    void replay_t::insert_event(unsigned event) {
+        events.push_back({0, event});
+    }
+
+    unsigned replay_t::event_size() {
+        return (unsigned)events.size();
+    }
+
+    event_t replay_t::get_event(unsigned index) {
+        return events.at(index);
+    }
+
+    statistics replay_t::get_expected_score(unsigned event, unsigned choice) {
+        auto event_data = events[event];
+        if (event_data.player == ~0)
+            return {};
+        return gcad::get_expected_score(
+            this, event_data.player, event_data.observation,
+            choice
+        );
     }
 }
