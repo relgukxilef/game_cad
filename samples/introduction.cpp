@@ -36,6 +36,7 @@ Currently I'm trying to get the library into a state where it has a mostly stabl
 #include <cassert>
 #include <cstdio>
 #include <gcad/replay.h>
+#include <gcad/iterators.h>
 
 struct monty_hall {
     int price, choice, reveal;
@@ -90,7 +91,7 @@ int main() {
     // solver stores model of the game
     gcad::solver_t solver;
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < 1000; i++) {
         // create an empty replay with 1 player and play
         gcad::replay_t replay(1, &solver);
         monty_hall game;
@@ -166,49 +167,29 @@ int main() {
     }
 
     // explore game tree
-    {
-        std::vector<unsigned> path;
-        while (true) {
-            gcad::replay_t replay(1, &solver);
-            for (auto event : path)
-                replay.insert_event(event);
+    for (gcad::replay_t& replay : gcad::tree({1, &solver})) {
+        unsigned path_size = replay.event_size();
+        monty_hall game;
+        game.play(replay);
 
-            monty_hall game;
-            game.play(replay);
-
-            if (path.size() < replay.event_size()) {
-                path.push_back(0);
-            } else {
-                while (
-                    !path.empty() && 
-                    ++path.back() == replay.get_event((int)path.size() - 1).size
-                ) {
-                    path.pop_back();
-                }
-            }
-
-            if (path.empty())
-                break;
-
-            for (int i = 0; i + 1 < path.size(); i++) {
-                auto event = replay.get_event(i);
-                if (path[i] + 1 == event.size)
-                    fputs(" ", stdout);
-                else
-                    fputs("\xB3", stdout);
-            }
-            auto event = replay.get_event((int)path.size() - 1);
-            if (path.back() + 1 == event.size)
-                fputs("\xC0", stdout);
+        for (int i = 0; i + 1 < path_size; i++) {
+            auto event = replay.get_event(i);
+            if (event.index + 1 == event.size)
+                fputs(" ", stdout);
             else
-                fputs("\xC3", stdout);
-            printf(
-                "%i: %.2f\n", path.back() + 1, 
-                replay.get_expected_score(
-                    (int)path.size() - 1, path.back()
-                ).mean
-            );
+                fputs("\xB3", stdout);
         }
+        auto event = replay.get_event(path_size - 1);
+        if (event.index + 1 == event.size)
+            fputs("\xC0", stdout);
+        else
+            fputs("\xC3", stdout);
+        printf(
+            "%i: %.2f\n", event.index + 1,
+            replay.get_expected_score(
+                path_size - 1, event.index
+            ).mean
+        );
     }
 }
 //! [hidden]

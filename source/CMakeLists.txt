@@ -3,6 +3,7 @@ add_library(
     solver.cpp
     replay.cpp
     players2.cpp
+    iterators.cpp
 )
 
 target_compile_features(GameCAD PUBLIC cxx_std_20)

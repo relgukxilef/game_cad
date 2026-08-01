@@ -268,7 +268,7 @@ namespace gcad {
         current_event = 0;
     }
 
-    unsigned replay_t::size() {
+    unsigned replay_t::size() const {
         return unsigned(players.size());
     }
 

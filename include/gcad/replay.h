@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <optional>
 
@@ -115,7 +117,7 @@ namespace gcad {
         void restart(); // TODO: remove
 
         //! Number of players.
-        unsigned size();
+        unsigned size() const;
 
         //! Let all players make the same observation.
         void see_all(unsigned value);
