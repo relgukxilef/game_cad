@@ -327,4 +327,8 @@ namespace gcad {
             choice
         );
     }
+
+    void replay_t::set_event_name(std::string name) {
+        events[current_event - 1].name = name;
+    }
 }

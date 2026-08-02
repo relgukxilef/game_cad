@@ -14,6 +14,7 @@ namespace gcad {
         unsigned size = 0, index = 0;
         unsigned player = ~0u; // ~0 for none
         unsigned observation = 0;
+        std::string name;
     };
 
     //! A player in a replay, returned by \ref replay_t::operator[].
@@ -77,7 +78,7 @@ namespace gcad {
         //! turn. See https://github.com/relgukxilef/game_cad/issues/20.
         void input(unsigned value);
 
-        //! \brief Estimated the expected score for performing the given move at
+        //! \brief Estimate the expected score for performing the given move at
         //! the current turn.
         statistics get_expected_score(unsigned choice);
 
@@ -148,6 +149,8 @@ namespace gcad {
         event_t get_event(unsigned index);
 
         statistics get_expected_score(unsigned event, unsigned choice);
+
+        void set_event_name(std::string name);
 
         // TODO: maybe move to separate struct
         unsigned current_player = 0;

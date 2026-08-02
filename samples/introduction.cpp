@@ -37,6 +37,7 @@ Currently I'm trying to get the library into a state where it has a mostly stabl
 #include <cstdio>
 #include <gcad/replay.h>
 #include <gcad/iterators.h>
+#include <string>
 
 struct monty_hall {
     int price, choice, reveal;
@@ -50,14 +51,20 @@ struct monty_hall {
         case 0:
             // price is behind one of three doors
             price = replay.random(3);
+            replay.set_event_name(
+                "put price behind door " + std::to_string(price + 1)
+            );
 
             // player chooses one of the 3 doors
             choice = player.choose(3).value();
+            replay.set_event_name("pick door " + std::to_string(choice + 1));
 
             // the host reveals one of the doors that doesn't have the price
             reveal = 3 - price - choice;
-            if (price == choice)
+            if (price == choice) {
                 reveal = (price + 1 + replay.random(2)) % 3;
+                replay.set_event_name("reveal door " + std::to_string(reveal + 1));
+            }
             assert(reveal != price);
             assert(reveal != choice);
 
@@ -67,8 +74,12 @@ struct monty_hall {
         case 1:
             // player may change their choice of door
             change = player.choose(2).value();
-            if (change)
+            if (change) {
                 choice = 3 - choice - reveal;
+                replay.set_event_name("change");
+            } else {
+                replay.set_event_name("stay");
+            }
             assert(choice != reveal);
 
             // if the choice was correct, give the player a point
@@ -185,7 +196,7 @@ int main() {
         else
             fputs("\xC3", stdout);
         printf(
-            "%i: %.2f\n", event.index + 1,
+            "%s: %.2f\n", event.name.c_str(),
             replay.get_expected_score(
                 path_size - 1, event.index
             ).mean

@@ -8,7 +8,7 @@ namespace gcad {
     void tree_iterator_t::operator++() {
         // TODO: there should be a function that resizes events and removes
         // player observations and inputs
-        bool end = current_depth >= replay.events.size();
+        bool end = current_depth == replay.events.size();
         replay.events.resize(current_depth);
         replay_t next_replay = {replay.size(), replay.solver};
         next_replay.events = replay.events;
