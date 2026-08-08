@@ -63,7 +63,9 @@ struct monty_hall {
             reveal = 3 - price - choice;
             if (price == choice) {
                 reveal = (price + 1 + replay.random(2)) % 3;
-                replay.set_event_name("reveal door " + std::to_string(reveal + 1));
+                replay.set_event_name(
+                    "reveal door " + std::to_string(reveal + 1)
+                );
             }
             assert(reveal != price);
             assert(reveal != choice);
