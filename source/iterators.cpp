@@ -14,7 +14,7 @@ namespace gcad {
         next_replay.events = replay.events;
         replay = std::move(next_replay);
 
-        if (!end) {
+        if (!end && current_depth != depth) {
             replay.insert_event(0);
 
         } else {
@@ -30,9 +30,9 @@ namespace gcad {
     }
 
     tree_iterator_t tree_t::begin() {
-        // TODO: use replay as starting point?
-        replay_t current_replay = {replay.size(), replay.solver};
-        current_replay.insert_event(0);
+        replay_t current_replay = {size, solver};
+        if (depth != 0)
+            current_replay.insert_event(0);
         return {current_replay, depth, 1};
     }
 }

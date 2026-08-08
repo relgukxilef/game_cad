@@ -18,8 +18,8 @@ namespace gcad {
     };
 
     struct tree_t {
-        // TODO: is it necessary to have a copy of replay here?
-        replay_t replay;
+        solver_t* solver;
+        unsigned size;
         int depth;
         tree_iterator_t begin();
         end_t end() {
@@ -27,7 +27,10 @@ namespace gcad {
         }
     };
 
+    //! \brief Create an iterable object that produces all possible replays.
+    //! For this to work, the returned replay needs to be played to the end 
+    //! before advancing the iterator.
     inline tree_t tree(replay_t replay, int depth = -1) {
-        return tree_t{replay, depth};
+        return tree_t{replay.solver, replay.size(), depth};
     }
 }
