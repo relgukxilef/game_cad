@@ -30,6 +30,9 @@ namespace gcad {
     //! \brief Create an iterable object that produces all possible replays.
     //! For this to work, the returned replay needs to be played to the end 
     //! before advancing the iterator.
+    //! \param replay The replay to take the number of players and solver from.
+    //! \param depth The maximum number of events to expand. Set to -1 for 
+    //! unlimited, which is only useful for small game trees.
     inline tree_t tree(replay_t replay, int depth = -1) {
         return tree_t{replay.solver, replay.size(), depth};
     }

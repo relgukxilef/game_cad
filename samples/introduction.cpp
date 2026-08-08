@@ -185,7 +185,7 @@ int main() {
         monty_hall game;
         game.play(replay);
 
-        for (int i = 0; i + 1 < path_size; i++) {
+        for (unsigned i = 0; i + 1 < path_size; i++) {
             auto event = replay.get_event(i);
             if (event.index + 1 == event.size)
                 fputs(" ", stdout);

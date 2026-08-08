@@ -222,6 +222,8 @@ namespace gcad {
 
     void player_ptr::input(unsigned move) {
         auto &player = players->players[index];
+        // TODO: allow inserting moves in advance, before knowing the 
+        // observations
         player.moves.push_back({move, player.current_observation, 0});
     }
 

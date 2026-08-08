@@ -5,6 +5,7 @@
 
 #include "solver.h"
 
+//! \brief The namespace of GameCAD.
 namespace gcad {
     struct player_t;
 
@@ -141,15 +142,25 @@ namespace gcad {
         //! and how many playthroughs have already been played.
         bool rejected();
 
-        //! \brief
+        //! \brief Insert an event at the end of the replay. This will be 
+        //! returned by calls to \ref random or \ref player_ptr::choose.
         void insert_event(unsigned event);
 
+        //! Return the number of events currently in the replay.
         unsigned event_size();
 
+        //! Get information about the event at the given index.
         event_t get_event(unsigned index);
 
+        //! \brief Estimate the expected score for performing the given move at
+        //! the given event for the player who's turn it is at that event.
         statistics get_expected_score(unsigned event, unsigned choice);
 
+        //! \brief Set the name of the last event played. 
+        //! \details This will be returned by \ref get_event and is useful for 
+        //! exploring the game tree, but has no influence on other functions. It
+        //! should be called right after a call to \ref random or 
+        //! \ref player_ptr::choose.
         void set_event_name(std::string name);
 
         // TODO: maybe move to separate struct
