@@ -1,10 +1,12 @@
-#include <cstdio>
 #include <gcad/replay.h>
+#include <gcad/iterators.h>
+
+#include <cstdio>
 #include <utility>
 
 using namespace std;
 
-void play(gcad::replay_t replay) {
+void play(gcad::replay_t& replay) {
     struct player {
         gcad::player_ptr replay;
         int money = 2;
@@ -18,8 +20,10 @@ void play(gcad::replay_t replay) {
     for (int i = 0; i < 2; i++) {
         auto& player = players[i];
         player.replay = replay[i];
-        swap(deck[2 - i], deck[replay.random(i + 1)]);
+        swap(deck[2 - i], deck[replay.random(3 - i)]);
         auto card = deck[2 - i];
+        const char* cards[]{"draw jack", "draw queen", "draw king"};
+        replay.set_event_name(cards[card - 1]);
         player.replay.see(card);
         player.card = card;
         player.money--;
@@ -33,7 +37,7 @@ void play(gcad::replay_t replay) {
         auto& player = players[0];
         if (!bet) {
             auto choice = player.replay.choose(2).value();
-            printf(choice ? "check " : "bet ");
+            replay.set_event_name(choice ? "check " : "bet ");
             replay.see_all(choice);
             if (choice) {
                 // check
@@ -48,7 +52,7 @@ void play(gcad::replay_t replay) {
             }
         } else {
             auto choice = player.replay.choose(2).value();
-            printf(choice ? "fold " : "call ");
+            replay.set_event_name(choice ? "fold " : "call ");
             replay.see_all(choice);
             if (choice) {
                 // fold
@@ -62,7 +66,6 @@ void play(gcad::replay_t replay) {
         }
         swap(players[0], players[1]);
     }
-    printf("\n");
 
     if (players[0].card > players[1].card) {
         players[0].money += pot;
@@ -80,5 +83,29 @@ int main() {
     for (int i = 0; i < 200; i++) {
         gcad::replay_t replay(2, &solver);
         play(replay);
+    }
+
+    for (gcad::replay_t& replay : gcad::tree({2, &solver})) {
+        unsigned path_size = replay.event_size();
+        play(replay);
+
+        for (unsigned i = 0; i + 1 < path_size; i++) {
+            auto event = replay.get_event(i);
+            if (event.index + 1 == event.size)
+                fputs(" ", stdout);
+            else
+                fputs("\xB3", stdout);
+        }
+        auto event = replay.get_event(path_size - 1);
+        if (event.index + 1 == event.size)
+            fputs("\xC0", stdout);
+        else
+            fputs("\xC3", stdout);
+        printf(
+            "%s: %.2f\n", event.name.c_str(),
+            replay.get_expected_score(
+                path_size - 1, event.index
+            ).mean
+        );
     }
 }
