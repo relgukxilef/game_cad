@@ -50,7 +50,19 @@ for (int i = 0; i < 100; i++) {
 }
 //! [sample]
 
+replay = {2, &solver};
 //! [input]
+replay[0].input(1);
 replay[0].input(2);
+replay[1].input(2);
 //! [input]
+replay.see_all(1);
+assert(replay[0].choose(3) == 1);
+replay.see_all(1);
+assert(replay[0].choose(3) == 2);
+replay.see_all(1);
+assert(replay[1].choose(3) == 2);
+replay[0].score(0);
+replay[1].score(0);
+
 }

@@ -73,10 +73,11 @@ namespace gcad {
 
         //! \brief Add a move from this player to the replay.
         //! \details This can be used to insert human moves or to restrict the
-        //! sampling to a specific subtree.
+        //! sampling to a specific subtree. This is similar to 
+        //! \ref replay_t::insert_event, but only forces a move for a specific 
+        //! player. If both functions are used, \ref replay_t::insert_event 
+        //! takes precendent.
         //! \snippet functions.cpp input
-        //! \bug Right now it is only valid to add a move when it's that players
-        //! turn. See https://github.com/relgukxilef/game_cad/issues/20.
         void input(unsigned value);
 
         //! \brief Estimate the expected score for performing the given move at

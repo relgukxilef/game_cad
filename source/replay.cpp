@@ -48,17 +48,20 @@ namespace gcad {
         float bias_weight = 0;
         float weight = 0;
 
-        if (player.current_move < player.moves.size()) {
-            move = player.moves[player.current_move].move;
-            // Replay can't contain packed moves as the mask is not known at the
-            // call to input
-
-        } else if (players->current_event < players->events.size()) {
+        // TODO: what to do if an enforced move is masked out?
+        if (players->current_event < players->events.size()) {
             auto& event = players->events[players->current_event];
             move = event.index;
             event.size = maximum;
             event.player = index;
             event.observation = player.current_observation;
+
+        } else if (player.current_move < player.moves.size()) {
+            auto& player_move = player.moves[player.current_move];
+            move = player_move.move;
+            player_move.observations = player.current_observation;
+            // Replay can't contain packed moves as the mask is not known at the
+            // call to input
 
         } else if (players->solver) {
             // TODO: avoid copy
@@ -222,9 +225,7 @@ namespace gcad {
 
     void player_ptr::input(unsigned move) {
         auto &player = players->players[index];
-        // TODO: allow inserting moves in advance, before knowing the 
-        // observations
-        player.moves.push_back({move, player.current_observation, 0});
+        player.moves.push_back({move, 0, 0});
     }
 
     statistics get_expected_score(

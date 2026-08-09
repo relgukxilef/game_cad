@@ -154,7 +154,7 @@ int main() {
     // explore which doors the host picks
     {
         int histogram[3] = {0};
-        gcad::replay_t replay(1, &solver);
+        gcad::replay_t replay(1);
         // force player to pick the first door and stick with it
         replay[0].input(0);
         replay[0].input(0);
