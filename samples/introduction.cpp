@@ -36,6 +36,8 @@ Currently I'm trying to get the library into a state where it has a mostly stabl
 #include <cassert>
 #include <cstdio>
 #include <gcad/replay.h>
+#include <gcad/iterators.h>
+#include <string>
 
 struct monty_hall {
     int price, choice, reveal;
@@ -49,14 +51,22 @@ struct monty_hall {
         case 0:
             // price is behind one of three doors
             price = replay.random(3);
+            replay.set_event_name(
+                "put price behind door " + std::to_string(price + 1)
+            );
 
             // player chooses one of the 3 doors
             choice = player.choose(3).value();
+            replay.set_event_name("pick door " + std::to_string(choice + 1));
 
             // the host reveals one of the doors that doesn't have the price
             reveal = 3 - price - choice;
-            if (price == choice)
+            if (price == choice) {
                 reveal = (price + 1 + replay.random(2)) % 3;
+                replay.set_event_name(
+                    "reveal door " + std::to_string(reveal + 1)
+                );
+            }
             assert(reveal != price);
             assert(reveal != choice);
 
@@ -66,8 +76,12 @@ struct monty_hall {
         case 1:
             // player may change their choice of door
             change = player.choose(2).value();
-            if (change)
+            if (change) {
                 choice = 3 - choice - reveal;
+                replay.set_event_name("change");
+            } else {
+                replay.set_event_name("stay");
+            }
             assert(choice != reveal);
 
             // if the choice was correct, give the player a point
@@ -90,7 +104,7 @@ int main() {
     // solver stores model of the game
     gcad::solver_t solver;
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < 1000; i++) {
         // create an empty replay with 1 player and play
         gcad::replay_t replay(1, &solver);
         monty_hall game;
@@ -140,9 +154,11 @@ int main() {
     // explore which doors the host picks
     {
         int histogram[3] = {0};
-        gcad::replay_t replay(1, &solver);
-        // let player pick the first door
+        gcad::replay_t replay(1);
+        // force player to pick the first door and stick with it
         replay[0].input(0);
+        replay[0].input(0);
+        int wins = 0;
         // sample potential continuations
         for (auto i = 0; i < 100; i++) {
             gcad::replay_t hypothesis = replay[0].sample(&solver);
@@ -150,14 +166,43 @@ int main() {
             monty_hall game;
             game.play(hypothesis);
 
+            if (game.choice == game.price)
+                wins++;
             histogram[game.reveal]++;
         }
 
+        printf("Player won %i times\n", wins);
         printf("Host revealed doors ");
         for (auto door : histogram) {
             printf("%ix, ", door);
         }
         printf("\n");
+    }
+
+    // explore game tree
+    for (gcad::replay_t& replay : gcad::tree({1, &solver})) {
+        unsigned path_size = replay.event_size();
+        monty_hall game;
+        game.play(replay);
+
+        for (unsigned i = 0; i + 1 < path_size; i++) {
+            auto event = replay.get_event(i);
+            if (event.index + 1 == event.size)
+                fputs(" ", stdout);
+            else
+                fputs("\xB3", stdout);
+        }
+        auto event = replay.get_event(path_size - 1);
+        if (event.index + 1 == event.size)
+            fputs("\xC0", stdout);
+        else
+            fputs("\xC3", stdout);
+        printf(
+            "%s: %.2f\n", event.name.c_str(),
+            replay.get_expected_score(
+                path_size - 1, event.index
+            ).mean
+        );
     }
 }
 //! [hidden]

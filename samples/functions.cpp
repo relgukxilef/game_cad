@@ -1,3 +1,4 @@
+#include "gcad/solver.h"
 #include <gcad/replay.h>
 #include <assert.h>
 
@@ -50,7 +51,33 @@ for (int i = 0; i < 100; i++) {
 }
 //! [sample]
 
+{
 //! [input]
+gcad::solver_t solver;
+gcad::replay_t replay(1, &solver);
+replay[0].input(1);
 replay[0].input(2);
+assert(replay[0].choose(3) == 1);
+assert(replay[0].choose(3) == 2);
 //! [input]
+}
+
+{
+//! [expect]
+gcad::solver_t solver;
+for (int i = 0; i < 100; i++) {
+    // play a game where a player sees a dice roll
+    gcad::replay_t replay(1, &solver);
+    auto outcome = replay.random(6) + 1;
+    replay[0].see(outcome);
+}
+
+gcad::replay_t replay(1, &solver);
+// restrict replay to playthroughs where player saw a 1
+replay[0].expect(1);
+// random outcome will be biased towards games with that restriction
+assert(replay.random(6) + 1 == 1);
+//! [expect]
+}
+
 }
