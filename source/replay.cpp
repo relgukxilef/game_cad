@@ -127,6 +127,7 @@ namespace gcad {
                 players->contradiction = true;
             }
             if (player.current_observation == player.observations.size() - 1) {
+                // TODO: Is players->constrained_player relevant here?
                 // no more constraints
                 players->constrained = false;
             }
@@ -226,6 +227,11 @@ namespace gcad {
     void player_ptr::input(unsigned move) {
         auto &player = players->players[index];
         player.moves.push_back({move, 0, 0});
+    }
+
+    void player_ptr::expect(unsigned value) {
+        auto &player = players->players[index];
+        player.observations.push_back(value);
     }
 
     statistics get_expected_score(
