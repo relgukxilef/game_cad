@@ -1,12 +1,22 @@
+#pragma once
+
 #include <vector>
 #include <optional>
 
 #include "solver.h"
 
+//! \brief The namespace of GameCAD.
 namespace gcad {
     struct player_t;
 
     struct replay_t;
+
+    struct event_t {
+        unsigned size = 0, index = 0;
+        unsigned player = ~0u; // ~0 for none
+        unsigned observation = 0;
+        std::string name;
+    };
 
     //! A player in a replay, returned by \ref replay_t::operator[].
     struct player_ptr {
@@ -63,13 +73,20 @@ namespace gcad {
 
         //! \brief Add a move from this player to the replay.
         //! \details This can be used to insert human moves or to restrict the
-        //! sampling to a specific subtree.
+        //! sampling to a specific subtree. This is similar to 
+        //! \ref replay_t::insert_event, but only forces a move for a specific 
+        //! player. If both functions are used, \ref replay_t::insert_event 
+        //! takes precendent.
         //! \snippet functions.cpp input
-        //! \bug Right now it is only valid to add a move when it's that players
-        //! turn. See https://github.com/relgukxilef/game_cad/issues/20.
         void input(unsigned value);
 
-        //! \brief Estimated the expected score for performing the given move at
+        //! \brief Add an expected observation to then end of the replay.
+        //! \details Results from \ref choose and \ref replay_t::random will be
+        //! biased towards ones that are likely to lead to that observation.
+        //! \snippet functions.cpp expect
+        void expect(unsigned value);
+
+        //! \brief Estimate the expected score for performing the given move at
         //! the current turn.
         statistics get_expected_score(unsigned choice);
 
@@ -81,6 +98,20 @@ namespace gcad {
     //! playthrough.
     //! \details It allows replaying games and sampling the game tree or 
     //! subtrees of it.
+    //! It stores an event index and an event list. Each action it reads an 
+    //! event from the event list. An event is a player move or a random 
+    //! outcome. If there are no more events in the event list, it creates new
+    //! events and adds them to the list.
+    //! At the end of the game, the event list is a full replay. To play the
+    //! game to a specific point, use insert_event to add to the event list 
+    //! before playing the game. You can then continue the game from that point 
+    //! on.
+    //! Additionally to the event list, each player has a list of moves and 
+    //! observations. Both can be set by the caller to force moves, for any 
+    //! number of players.
+    //! Normally you will want to either set some players moves or observations, 
+    //! or set the event list. If both are set and they contradict each other 
+    //! the behaviour is undefined.
     struct replay_t {
         //! \brief Construct a new replay for the given number of players and 
         //! given solver. \snippet functions.cpp construct
@@ -95,7 +126,7 @@ namespace gcad {
         void restart(); // TODO: remove
 
         //! Number of players.
-        unsigned size();
+        unsigned size() const;
 
         //! Let all players make the same observation.
         void see_all(unsigned value);
@@ -118,6 +149,27 @@ namespace gcad {
         //! and how many playthroughs have already been played.
         bool rejected();
 
+        //! \brief Insert an event at the end of the replay. This will be 
+        //! returned by calls to \ref random or \ref player_ptr::choose.
+        void insert_event(unsigned event);
+
+        //! Return the number of events currently in the replay.
+        unsigned event_size();
+
+        //! Get information about the event at the given index.
+        event_t get_event(unsigned index);
+
+        //! \brief Estimate the expected score for performing the given move at
+        //! the given event for the player who's turn it is at that event.
+        statistics get_expected_score(unsigned event, unsigned choice);
+
+        //! \brief Set the name of the last event played. 
+        //! \details This will be returned by \ref get_event and is useful for 
+        //! exploring the game tree, but has no influence on other functions. It
+        //! should be called right after a call to \ref random or 
+        //! \ref player_ptr::choose.
+        void set_event_name(std::string name);
+
         // TODO: maybe move to separate struct
         unsigned current_player = 0;
         unsigned current_choice = 0;
@@ -127,8 +179,8 @@ namespace gcad {
         std::vector<player_t> players;
         std::vector<unsigned> assumed_moves;
         std::vector<float> assumed_moves_weights;
-        std::vector<unsigned> random_events;
-        unsigned current_random_event = 0;
+        std::vector<event_t> events;
+        unsigned current_event = 0;
 
         solver_t *solver;
     };
