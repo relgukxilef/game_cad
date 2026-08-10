@@ -80,7 +80,7 @@ void play(gcad::replay_t& replay) {
 
 int main() {
     gcad::solver_t solver;
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < 1000; i++) {
         gcad::replay_t replay(2, &solver);
         play(replay);
     }
