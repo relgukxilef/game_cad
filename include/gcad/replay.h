@@ -80,7 +80,7 @@ namespace gcad {
         //! \snippet functions.cpp input
         void input(unsigned value);
 
-        //! \brief Add an expected observation to then end of the replay.
+        //! \brief Add an expected observation to the end of the replay.
         //! \details Results from \ref choose and \ref replay_t::random will be
         //! biased towards ones that are likely to lead to that observation.
         //! \snippet functions.cpp expect
